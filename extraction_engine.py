@@ -30,7 +30,7 @@ def _get_supported_model_candidates():
     try:
         for model in genai.list_models():
             methods = getattr(model, "supported_generation_methods", []) or []
-            # only care about models that can generate content basically
+            # only care about models that can generate content 
             if "generateContent" not in methods:
                 continue
             name = getattr(model, "name", "")
