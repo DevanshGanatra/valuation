@@ -1,32 +1,31 @@
-import streamlit as st
-import base64
-from extraction_engine import extract_structured_data
-from utils import convert_sqm_to_sqft, generate_excel, generate_pdf_report
-import os
+import streamlit as st  
+import base64         
+from extraction_engine import extract_structured_data  
+from utils import convert_sqm_to_sqft, generate_excel, generate_pdf_report  
+import hashlib       
 
 st.set_page_config(page_title="Gujarati Dastavej AI Valuator", layout="wide")
 
-# --- CUSTOM CSS ---
 st.markdown("""
     <style>
     .main {
-        background-color: #f8f9fa;
+        background-color: #f8f9fa; /* light grey */
     }
     .stButton>button {
         width: 100%;
         border-radius: 5px;
         height: 3em;
-        background-color: #007bff;
+        background-color: #007bff; /* blue */
         color: white;
     }
     .stForm {
         background-color: white;
         padding: 20px;
         border-radius: 10px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1); /* shadow */
     }
     h1, h2, h3 {
-        color: #343a40;
+        color: #343a40; /* dark grey */
     }
     </style>
     """, unsafe_allow_html=True)
@@ -34,55 +33,77 @@ st.markdown("""
 st.title("📄 Gujarati Dastavej AI Valuator")
 st.markdown("Extract structured data from property documents and auto-fill valuation forms.")
 
-# --- SIDEBAR ---
+
 with st.sidebar:
     st.header("Settings")
     api_key = st.text_input("Enter Gemini API Key", type="password")
     st.info("💡 Your API key is used only for processing and is not stored.")
     st.markdown("---")
+    
     st.markdown("### Instructions")
     st.write("1. Upload a Gujarati Dastavej PDF.")
     st.write("2. AI will extract data automatically.")
     st.write("3. Review and edit the pre-filled form.")
     st.write("4. Download the final report.")
+    
+    st.markdown("---")
+    st.markdown("### ✨ Project Credits")
+    st.success("Project by **Devansh Ganatra**")
 
-# --- MAIN UI ---
+# main logic
 if not api_key:
+    # warning
     st.warning("Please enter your Gemini API Key in the sidebar to begin.")
 else:
+    # let user pick a pdf
     uploaded_file = st.file_uploader("Upload Gujarati Dastavej (PDF)", type=["pdf"])
 
     if uploaded_file is not None:
+        # get the pdf bytes
+        uploaded_pdf_bytes = uploaded_file.getvalue()
+        
+        # make a unique id for this file based on its content
+        file_hash = hashlib.sha256(uploaded_pdf_bytes).hexdigest()
+        
+        # if its a different file, clear the old stuff
+        if st.session_state.get("last_uploaded_file_hash") != file_hash:
+            st.session_state.pop("extracted_data", None)
+            st.session_state.pop("final_data", None)
+            st.session_state.last_uploaded_file_hash = file_hash
+
         col1, col2 = st.columns([1, 1])
 
         with col1:
             st.subheader("PDF Preview")
-            # Display PDF
-            base64_pdf = base64.b64encode(uploaded_file.read()).decode('utf-8')
+            # convert pdf bytes to base64 so browser can show it
+            base64_pdf = base64.b64encode(uploaded_pdf_bytes).decode('utf-8')
+            # embed the pdf in the page
             pdf_display = f'<embed src="data:application/pdf;base64,{base64_pdf}" width="100%" height="800" type="application/pdf">'
             st.markdown(pdf_display, unsafe_allow_html=True)
-            
-            # Reset file pointer for extraction
-            uploaded_file.seek(0)
 
         with col2:
             st.subheader("Extracted Details & Form")
             
+            # first time? run the ai to extract data
             if 'extracted_data' not in st.session_state:
                 with st.spinner("AI is analyzing the document... This may take a moment."):
                     try:
-                        extracted_data = extract_structured_data(api_key, uploaded_file.read())
+                        # call to the extraction engine to get the data
+                        extracted_data = extract_structured_data(api_key, uploaded_pdf_bytes)
                         if "error" in extracted_data:
                             st.error(extracted_data["error"])
                             st.stop()
+
                         st.session_state.extracted_data = extracted_data
                         st.success("Data extracted successfully!")
                     except Exception as e:
                         st.error(f"An error occurred: {str(e)}")
                         st.stop()
             
+
             data = st.session_state.extracted_data
 
+        
             with st.form("valuation_form"):
                 st.markdown("### 👤 Owner Details")
                 owner_name = st.text_input("Owner Name (માલિકનું નામ)", value=data.get("owner_name", ""))
@@ -103,7 +124,7 @@ else:
                 c6, c7 = st.columns(2)
                 area_sqm = c6.text_input("Area (Sq. Meter)", value=data.get("area_sq_meter", ""))
                 
-                # Auto-calculate Sq Feet if not present or changed
+  
                 extracted_sqft = data.get("area_sq_feet", "")
                 if area_sqm and not extracted_sqft:
                     calculated_sqft = convert_sqm_to_sqft(area_sqm)
@@ -125,6 +146,7 @@ else:
                 north = b3.text_area("North (ઉત્તર)", value=data.get("boundary_north", ""))
                 south = b4.text_area("South (દક્ષિણ)", value=data.get("boundary_south", ""))
 
+        
                 if st.form_submit_button("Confirm & Save"):
                     st.session_state.final_data = {
                         "owner_name": owner_name,
@@ -153,6 +175,7 @@ else:
                 
                 final_data = st.session_state.final_data
                 
+                # make an excel file
                 excel_data = generate_excel(final_data)
                 d1.download_button(
                     label="Download Excel (.xlsx)",
@@ -161,6 +184,7 @@ else:
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 )
                 
+                # make a pdf report
                 pdf_data = generate_pdf_report(final_data)
                 d2.download_button(
                     label="Download PDF Report",
@@ -169,6 +193,7 @@ else:
                     mime="application/pdf"
                 )
 
+        # button to reset
         if st.button("🔄 Process Another Document"):
             for key in list(st.session_state.keys()):
                 del st.session_state[key]
