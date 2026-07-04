@@ -25,3 +25,31 @@ with open("test_gujarati_report.pdf", "wb") as f:
     f.write(pdf_bytes)
 
 print("PDF generated successfully and saved to test_gujarati_report.pdf")
+
+data_712 = {
+    "document_type": "7/12 Extract (Satbara)",
+    "village": "પાલડી",
+    "taluka": "અમદાવાદ શહેર",
+    "district": "અમદાવાદ",
+    "survey_number": "૧૨૩",
+    "block_number": "૪૫",
+    "khata_number": "૬૭૮",
+    "owner_names": "દેવાંશ ગણાત્રા",
+    "tenure_type": "જૂની શરત",
+    "total_area": "1-23-45",
+    "land_type": "ખેતીલાયક",
+    "irrigation_source": "કુવો",
+    "crop_details": "ઘઉં, કપાસ",
+    "cultivator_name": "-",
+    "mutation_entry_numbers": "૧૦૦૧, ૧૦૦૨",
+    "encumbrance_loan_details": "બેંક ઓફ બરોડા લોન",
+    "rate_per_sqft": 1500,
+    "property_age_years": 10,
+    "estimated_value": "₹ 1,500,000.00"
+}
+
+pdf_bytes_712 = utils.generate_pdf_report(data_712)
+with open("test_712_report.pdf", "wb") as f:
+    f.write(pdf_bytes_712)
+
+print("7/12 PDF generated successfully and saved to test_712_report.pdf")
