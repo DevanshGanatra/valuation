@@ -452,7 +452,7 @@ else:
                     render_confidence("district", c3)
                     
                     st.markdown("### Property Identification")
-                    st.link_button("Verify on AnyROR ↗", "https://anyror.gujarat.gov.in/Anyror_B.aspx")
+                    st.link_button("Verify on AnyROR ↗", "https://anyror.gujarat.gov.in/")
                     c4, c5, c6 = st.columns(3)
                     form_data["survey_number"] = c4.text_input("Survey Number", value=data.get("survey_number", ""))
                     render_confidence("survey_number", c4)
@@ -491,7 +491,7 @@ else:
 
                 elif document_type == "Property Card":
                     st.markdown("### City Survey Details")
-                    st.link_button("Verify on AnyROR ↗", "https://anyror.gujarat.gov.in/CitySurvey_B.aspx")
+                    st.link_button("Verify on AnyROR ↗", "https://anyror.gujarat.gov.in/")
                     c1, c2 = st.columns(2)
                     form_data["city_survey_number"] = c1.text_input("City Survey (CTS) Number", value=data.get("city_survey_number", ""))
                     render_confidence("city_survey_number", c1)
