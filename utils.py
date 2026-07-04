@@ -3,23 +3,26 @@ from fpdf import FPDF  # fpdf lets us make pdf files
 import io              # handling stuff in memory
 import re              # regex for finding and cleaning text patterns
 
+def extract_numeric_value(text):
+    if not text:
+        return 0.0
+    text = str(text)
+    # Convert Gujarati digits to English digits
+    g_to_e = str.maketrans("૦૧૨૩૪૫૬૭૮૯", "0123456789")
+    text = text.translate(g_to_e)
+    # Extract the first valid float number from the string
+    match = re.search(r"[\d\.]+", text.replace(",", ""))
+    if match:
+        try:
+            return float(match.group(0))
+        except ValueError:
+            return 0.0
+    return 0.0
+
 def convert_sqm_to_sqft(sqm):
-    # just multipling by 10.7639
-    try:
-        if sqm is None:
-            return None
-        # cleaning it up, remove spaces and commas
-        normalized = str(sqm).strip()
-        if not normalized:
-            return None
-        normalized = normalized.replace(",", "")
-        normalized = re.sub(r"\s+", "", normalized)
-        # make sure its actually a number before doing math
-        if normalized.replace(".", "", 1).isdigit():
-            return round(float(normalized) * 10.7639, 2)
-    except Exception:
-        #  went wrong then return none
-        return None
+    val = extract_numeric_value(sqm)
+    if val > 0:
+        return round(val * 10.7639, 2)
     return None
 
 

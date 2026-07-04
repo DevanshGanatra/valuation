@@ -1,7 +1,7 @@
 import streamlit as st  
 import base64         
 from extraction_engine import extract_structured_data  
-from utils import convert_sqm_to_sqft, generate_excel, generate_pdf_report  
+from utils import convert_sqm_to_sqft, generate_excel, generate_pdf_report, extract_numeric_value  
 import hashlib       
 
 st.set_page_config(page_title=" Dastavej AI Valuator", layout="wide")
@@ -420,7 +420,7 @@ else:
                 calc_area_sqft = convert_sqm_to_sqft(calc_area_sqm)
             
             try:
-                area_val = float(str(calc_area_sqft).replace(",", "").strip())
+                area_val = extract_numeric_value(calc_area_sqft)
             except:
                 area_val = 0.0
 
@@ -642,17 +642,9 @@ else:
                     try:
                         # Attempt to parse whatever area field is used for the current document type
                         # If it's something like "1-23-45", this will fail, which is acceptable (defaults to 0)
-                        final_area_str = str(form_area_val).replace(",", "").strip()
-                        # simple fallback to extract numbers if there is a mix
-                        import re
-                        match = re.search(r"[\d\.]+", final_area_str)
-                        if match:
-                            final_area_val = float(match.group(0))
-                            # Convert sqm to sqft if this was a sqm field (like Property Card's "Area")
-                            if document_type != "Dastavej (Sale Deed)" and document_type != "Index-II":
-                                final_area_val = final_area_val * 10.7639
-                        else:
-                            final_area_val = 0.0
+                        final_area_val = extract_numeric_value(form_area_val)
+                        if final_area_val > 0 and document_type != "Dastavej (Sale Deed)" and document_type != "Index-II":
+                            final_area_val = final_area_val * 10.7639
                     except:
                         final_area_val = 0.0
                         
