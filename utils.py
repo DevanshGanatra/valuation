@@ -3,6 +3,24 @@ from fpdf import FPDF  # fpdf lets us make pdf files
 import io              # handling stuff in memory
 import re              # regex for finding and cleaning text patterns
 
+def parse_hectare_are_sqm(value):
+    if not value:
+        return None
+    text = str(value)
+    # Convert Gujarati digits to English digits
+    g_to_e = str.maketrans("૦૧૨૩૪૫૬૭૮૯", "0123456789")
+    text = text.translate(g_to_e)
+    
+    # Look for Hectare-Are-Sqm pattern (e.g. 1-23-45 or 0-50-00)
+    match = re.search(r"(\d+)-(\d+)-(\d+)", text)
+    if match:
+        hectare = int(match.group(1))
+        are = int(match.group(2))
+        sqm = int(match.group(3))
+        total_sqm = (hectare * 10000) + (are * 100) + sqm
+        return total_sqm
+    return None
+
 def extract_numeric_value(text):
     if not text:
         return 0.0

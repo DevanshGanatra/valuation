@@ -1,7 +1,7 @@
 import streamlit as st  
 import base64         
 from extraction_engine import extract_structured_data  
-from utils import convert_sqm_to_sqft, generate_excel, generate_pdf_report, extract_numeric_value  
+from utils import convert_sqm_to_sqft, generate_excel, generate_pdf_report, extract_numeric_value, parse_hectare_are_sqm  
 import hashlib       
 
 st.set_page_config(page_title=" Dastavej AI Valuator", layout="wide")
@@ -416,6 +416,11 @@ else:
             if not calc_area_sqft and not calc_area_sqm:
                 calc_area_sqm = data.get("area", "") or data.get("total_area", "")
 
+            if document_type == "7/12 Extract (Satbara)":
+                hectare_sqm = parse_hectare_are_sqm(calc_area_sqm)
+                if hectare_sqm is not None:
+                    calc_area_sqm = hectare_sqm
+
             if calc_area_sqm and not calc_area_sqft:
                 calc_area_sqft = convert_sqm_to_sqft(calc_area_sqm)
             
@@ -643,8 +648,15 @@ else:
                     # Recalculate estimated value based on form's area, handling different formats
                     try:
                         # Attempt to parse whatever area field is used for the current document type
-                        # If it's something like "1-23-45", this will fail, which is acceptable (defaults to 0)
-                        final_area_val = extract_numeric_value(form_area_val)
+                        final_area_val = None
+                        if document_type == "7/12 Extract (Satbara)":
+                            parsed_hectare = parse_hectare_are_sqm(form_area_val)
+                            if parsed_hectare is not None:
+                                final_area_val = parsed_hectare
+                                
+                        if final_area_val is None:
+                            final_area_val = extract_numeric_value(form_area_val)
+                            
                         if final_area_val > 0 and document_type != "Dastavej (Sale Deed)" and document_type != "Index-II":
                             final_area_val = final_area_val * 10.7639
                     except:
