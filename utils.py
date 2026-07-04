@@ -120,5 +120,5 @@ def generate_pdf_report(data):
         # add some space between sections
         pdf.ln(5)
         
-    # return the actual pdf data
-    return pdf.output()
+    # return the actual pdf data as bytes (Streamlit download_button does not support bytearray)
+    return bytes(pdf.output())
