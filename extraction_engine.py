@@ -11,13 +11,21 @@ def get_pdf_images(doc):
     # because the ai needs to see it as a picture to understand whats going on
    
     images = []
-    for page_num in range(len(doc)):
+    
+    # Dynamic resolution scaling: prevent Out-Of-Memory (OOM) crashes on large PDFs
+    matrix_scale = 2.0 if len(doc) <= 5 else 1.5 if len(doc) <= 15 else 1.0
+    matrix = fitz.Matrix(matrix_scale, matrix_scale)
+    
+    # Cap processing to first 20 pages to avoid Gemini payload limits and memory spikes
+    max_pages = min(len(doc), 20)
+    
+    for page_num in range(max_pages):
         # grab this specific page
         page = doc.load_page(page_num)
-        # turn it in a pixmap thing, making it twice as big so its clearer
-        pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))  
-        # convert it to png bytes
-        img_data = pix.tobytes("png")
+        # turn it in a pixmap thing
+        pix = page.get_pixmap(matrix=matrix)  
+        # convert it to jpeg bytes (much smaller than png, prevents 503 payload errors)
+        img_data = pix.tobytes("jpeg")
         # throw it in our images list
         images.append(Image.open(io.BytesIO(img_data)))
     return images
@@ -302,6 +310,10 @@ def extract_structured_data(api_key, pdf_document, document_type="Dastavej (Sale
         }
         """
     }
+
+    # Append critical JSON formatting instruction to all prompts
+    for key in PROMPTS:
+        PROMPTS[key] += "\n\nCRITICAL: Ensure the output is STRICTLY valid JSON. You must escape any double quotes (\\\") and newlines (\\\\n) inside string values. Do not truncate the JSON output."
 
     prompt = PROMPTS.get(document_type, PROMPTS["Dastavej (Sale Deed)"])
 
