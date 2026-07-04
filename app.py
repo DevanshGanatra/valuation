@@ -691,3 +691,19 @@ else:
             for key in list(st.session_state.keys()):
                 del st.session_state[key]
             st.rerun()
+
+        # Disable Google Chrome Autofill using a hidden JavaScript component
+        import streamlit.components.v1 as components
+        components.html(
+            """
+            <script>
+                const inputs = window.parent.document.querySelectorAll('input[type="text"]');
+                inputs.forEach(input => {
+                    input.setAttribute('autocomplete', 'new-password');
+                    input.setAttribute('data-form-type', 'other');
+                });
+            </script>
+            """,
+            height=0,
+            width=0,
+        )
