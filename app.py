@@ -387,6 +387,7 @@ else:
 
                         st.session_state.extracted_data = extracted_data
                         st.toast("Extraction complete!", icon="✅")
+                        st.rerun()
                     except Exception as e:
                         skeleton_placeholder.empty()
                         st.error(f"An error occurred: {str(e)}")
