@@ -270,10 +270,10 @@ with st.sidebar:
     st.markdown("---")
     
     st.markdown("### Instructions")
-    st.write("1. Upload a Gujarati Dastavej PDF.")
-    st.write("2. AI will extract data automatically.")
-    st.write("3. Review and edit the pre-filled form.")
-    st.write("4. Download the final report.")
+    st.write("1. Select document type (Dastavej, 7/12, etc).")
+    st.write("2. Upload the corresponding Gujarati PDF.")
+    st.write("3. Review the AI-extracted form and save.")
+    st.write("4. Download your final valuation report.")
     
     st.markdown("---")
     st.markdown("### ✨ Project Credits")

@@ -4,8 +4,5 @@ __pycache__/
 .env
 *.mp4
 *.zip
-Valuation-Project/
-*.mp4
-
 *.pdf
 *.docx
