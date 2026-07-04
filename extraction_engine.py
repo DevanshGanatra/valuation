@@ -49,7 +49,7 @@ def _get_supported_model_candidates():
         return preferred
     return ordered + remaining
 
-def extract_structured_data(api_key, pdf_content):
+def extract_structured_data(api_key, pdf_content, document_type="Dastavej (Sale Deed)"):
     # main function 
     genai.configure(api_key=api_key)
     
@@ -65,50 +65,170 @@ def extract_structured_data(api_key, pdf_content):
     # first turning the pdf pages into images
     images = get_pdf_images(pdf_content)
     
-    # this is prompt with all the instructions for the ai
-    prompt = """
-    Analyze the provided images of a Gujarati property document (Dastavej). 
-    Extract the following information in Gujarati (where applicable) and return it in a strictly structured JSON format.
-    If a field is not found, return an empty string or null.
-    
-    Fields to extract:
-    - owner_name (Owner Name / માલિકનું નામ)
-    - father_husband_name (Father / Husband Name / પિતા અથવા પતિનું નામ)
-    - survey_number (Survey Number / સર્વે નંબર)
-    - plot_block_number (Plot / Block Number / પ્લોટ અથવા બ્લોક નંબર)
-    - village (Village / ગામ)
-    - taluka (Taluka / તાલુકો)
-    - district (District / જિલ્લો)
-    - area_sq_meter (Area in Sq. Meter / ક્ષેત્રફળ ચો.મી. માં)
-    - area_sq_feet (Area in Sq. Feet / ક્ષેત્રફળ ચો.ફુટ માં)
-    - document_number (Document Number / દસ્તાવેજ નંબર)
-    - registration_date (Registration Date / રજીસ્ટ્રેશન તારીખ - DD/MM/YYYY)
-    - sub_registrar_office (Sub-Registrar Office / સબ-રજીસ્ટ્રાર કચેરી)
-    - boundary_east (East Boundary / પૂર્વ દિશાની વિગત)
-    - boundary_west (West Boundary / પશ્ચિમ દિશાની વિગત)
-    - boundary_north (North Boundary / ઉત્તર દિશાની વિગત)
-    - boundary_south (South Boundary / દક્ષિણ દિશાની વિગત)
+    PROMPTS = {
+        "Dastavej (Sale Deed)": """
+        Analyze the provided images of a Gujarati property document (Dastavej). 
+        Extract the following information in Gujarati (where applicable) and return it in a strictly structured JSON format.
+        If a field is not found, return an empty string or null.
+        
+        Fields to extract:
+        - owner_name (Owner Name / માલિકનું નામ)
+        - father_husband_name (Father / Husband Name / પિતા અથવા પતિનું નામ)
+        - survey_number (Survey Number / સર્વે નંબર)
+        - plot_block_number (Plot / Block Number / પ્લોટ અથવા બ્લોક નંબર)
+        - village (Village / ગામ)
+        - taluka (Taluka / તાલુકો)
+        - district (District / જિલ્લો)
+        - area_sq_meter (Area in Sq. Meter / ક્ષેત્રફળ ચો.મી. માં)
+        - area_sq_feet (Area in Sq. Feet / ક્ષેત્રફળ ચો.ફુટ માં)
+        - document_number (Document Number / દસ્તાવેજ નંબર)
+        - registration_date (Registration Date / રજીસ્ટ્રેશન તારીખ - DD/MM/YYYY)
+        - sub_registrar_office (Sub-Registrar Office / સબ-રજીસ્ટ્રાર કચેરી)
+        - boundary_east (East Boundary / પૂર્વ દિશાની વિગત)
+        - boundary_west (West Boundary / પશ્ચિમ દિશાની વિગત)
+        - boundary_north (North Boundary / ઉત્તર દિશાની વિગત)
+        - boundary_south (South Boundary / દક્ષિણ દિશાની વિગત)
 
-    JSON Structure Example:
-    {
-        "owner_name": "",
-        "father_husband_name": "",
-        "survey_number": "",
-        "plot_block_number": "",
-        "village": "",
-        "taluka": "",
-        "district": "",
-        "area_sq_meter": "",
-        "area_sq_feet": "",
-        "document_number": "",
-        "registration_date": "",
-        "sub_registrar_office": "",
-        "boundary_east": "",
-        "boundary_west": "",
-        "boundary_north": "",
-        "boundary_south": ""
+        JSON Structure Example:
+        {
+            "owner_name": "",
+            "father_husband_name": "",
+            "survey_number": "",
+            "plot_block_number": "",
+            "village": "",
+            "taluka": "",
+            "district": "",
+            "area_sq_meter": "",
+            "area_sq_feet": "",
+            "document_number": "",
+            "registration_date": "",
+            "sub_registrar_office": "",
+            "boundary_east": "",
+            "boundary_west": "",
+            "boundary_north": "",
+            "boundary_south": ""
+        }
+        """,
+        "7/12 Extract (Satbara)": """
+        Analyze the provided images of a 7/12 Extract (Satbara Utara — VF-7 + VF-12, rural/agricultural land) document.
+        Extract the following information in Gujarati (where applicable) and return it in a strictly structured JSON format.
+        If a field is not found, return an empty string or null.
+        
+        Fields to extract:
+        - village (Village / ગામ)
+        - taluka (Taluka / તાલુકો)
+        - district (District / જિલ્લો)
+        - survey_number (Survey Number / સર્વે નંબર)
+        - block_number (Block/Hissa Number / બ્લોક નંબર)
+        - khata_number (Khata Number / ખાતા નંબર)
+        - owner_names (Owner(s)/Khatedar Name(s) & Share / ખાતેદારનું નામ)
+        - tenure_type (Tenure Type (Old/New Tenure) / સત્તા પ્રકાર (જૂની/નવી શરત))
+        - total_area (Total Area / કુલ ક્ષેત્રફળ)
+        - land_type (Land Type (Agricultural/Non-Agri) / જમીનનો પ્રકાર)
+        - irrigation_source (Irrigation Source / પિયતનો સ્ત્રોત)
+        - crop_details (Crop Details (VF-12) / પાક વિગત)
+        - cultivator_name (Cultivator/Tenant Name (if different from owner) / ખેડૂત/ગણોતિયાનું નામ)
+        - mutation_entry_numbers (Mutation Entry No.s (VF-6 references) / હક્ક નોંધ નંબર)
+        - encumbrance_loan_details (Encumbrance/Loan Notation / બોજા/લોનની વિગત)
+
+        JSON Structure Example:
+        {
+            "village": "",
+            "taluka": "",
+            "district": "",
+            "survey_number": "",
+            "block_number": "",
+            "khata_number": "",
+            "owner_names": "",
+            "tenure_type": "",
+            "total_area": "",
+            "land_type": "",
+            "irrigation_source": "",
+            "crop_details": "",
+            "cultivator_name": "",
+            "mutation_entry_numbers": "",
+            "encumbrance_loan_details": ""
+        }
+        """,
+        "Property Card": """
+        Analyze the provided images of a Property Card (urban/city survey land, issued by City Survey Office) document.
+        Extract the following information in Gujarati (where applicable) and return it in a strictly structured JSON format.
+        If a field is not found, return an empty string or null.
+        
+        Fields to extract:
+        - city_survey_number (City Survey (CTS) Number / સીટી સર્વે નંબર)
+        - city_survey_office (City Survey Office / સીટી સર્વે ઓફિસ)
+        - ward (Ward / વોર્ડ)
+        - sheet_number (Sheet Number / શીટ નંબર)
+        - plot_number (Plot Number / પ્લોટ નંબર)
+        - owner_names (Owner(s) & Share / માલિકનું નામ અને હિસ્સો)
+        - area (Area / ક્ષેત્રફળ)
+        - tenure_type (Tenure Type / સત્તા પ્રકાર)
+        - land_use_type (Land Use (Residential/Commercial/Industrial) / વપરાશનો પ્રકાર)
+        - mutation_entry_details (Mutation Entry Details / દાખલ નોંધ વિગત)
+        - encumbrance_details (Encumbrance Details / બોજા/હક્કપત્રકની વિગત)
+        - property_tax_assessment_number (Property Tax Assessment No. / મિલકત વેરા મૂલ્યાંકન નંબર)
+        - boundary_east (East Boundary / પૂર્વ દિશાની વિગત)
+        - boundary_west (West Boundary / પશ્ચિમ દિશાની વિગત)
+        - boundary_north (North Boundary / ઉત્તર દિશાની વિગત)
+        - boundary_south (South Boundary / દક્ષિણ દિશાની વિગત)
+
+        JSON Structure Example:
+        {
+            "city_survey_number": "",
+            "city_survey_office": "",
+            "ward": "",
+            "sheet_number": "",
+            "plot_number": "",
+            "owner_names": "",
+            "area": "",
+            "tenure_type": "",
+            "land_use_type": "",
+            "mutation_entry_details": "",
+            "encumbrance_details": "",
+            "property_tax_assessment_number": "",
+            "boundary_east": "",
+            "boundary_west": "",
+            "boundary_north": "",
+            "boundary_south": ""
+        }
+        """,
+        "Index-II": """
+        Analyze the provided images of an Index-II (Garvi/Sub-Registrar one-page registration summary) document.
+        Extract the following information in Gujarati (where applicable) and return it in a strictly structured JSON format.
+        If a field is not found, return an empty string or null.
+        
+        Fields to extract:
+        - document_number (Document Number / દસ્તાવેજ નંબર)
+        - registration_date (Registration Date / નોંધણી તારીખ)
+        - sub_registrar_office (Sub-Registrar Office / સબ રજિસ્ટ્રાર કચેરી)
+        - document_type (Document Type (Sale/Mortgage/Gift, etc.) / દસ્તાવેજનો પ્રકાર)
+        - executant_name (Executant/Seller Name / કરનાર/વેચનારનું નામ)
+        - claimant_name (Claimant/Buyer Name / લેનાર/ખરીદનારનું નામ)
+        - property_description (Property Description (survey no., village, area) / મિલકતનું વર્ણન)
+        - agreement_value (Agreement/Consideration Value / દસ્તાવેજની કિંમત)
+        - jantri_value (Jantri (Govt. Guideline) Value / જંત્રી કિંમત)
+        - stamp_duty_paid (Stamp Duty Paid / સ્ટેમ્પ ડ્યુટી)
+        - registration_fee_paid (Registration Fee Paid / નોંધણી ફી)
+
+        JSON Structure Example:
+        {
+            "document_number": "",
+            "registration_date": "",
+            "sub_registrar_office": "",
+            "document_type": "",
+            "executant_name": "",
+            "claimant_name": "",
+            "property_description": "",
+            "agreement_value": "",
+            "jantri_value": "",
+            "stamp_duty_paid": "",
+            "registration_fee_paid": ""
+        }
+        """
     }
-    """
+
+    prompt = PROMPTS.get(document_type, PROMPTS["Dastavej (Sale Deed)"])
 
     # puting the prompt and images together to send to gemini
     content_parts = [prompt] + images

@@ -284,8 +284,18 @@ if not api_key:
     # warning
     st.warning("Please enter your Gemini API Key in the sidebar to begin.")
 else:
-    # let user pick a pdf
-    uploaded_file = st.file_uploader("Upload Gujarati Dastavej (PDF)", type=["pdf"])
+    document_type = st.selectbox(
+        "Select Document Type",
+        options=["Dastavej (Sale Deed)", "7/12 Extract (Satbara)", "Property Card", "Index-II"]
+    )
+    
+    if st.session_state.get("last_document_type") != document_type:
+        st.session_state.pop("extracted_data", None)
+        st.session_state.pop("final_data", None)
+        st.session_state.pop("pdf_preview_images", None)
+        st.session_state.last_document_type = document_type
+
+    uploaded_file = st.file_uploader(f"Upload {document_type} (PDF)", type=["pdf"])
 
     if uploaded_file is not None:
         # get the pdf bytes
@@ -368,7 +378,7 @@ else:
                 with st.spinner("AI is converting legal text to structured data..."):
                     try:
                         # call to the extraction engine to get the data
-                        extracted_data = extract_structured_data(api_key, uploaded_pdf_bytes)
+                        extracted_data = extract_structured_data(api_key, uploaded_pdf_bytes, document_type)
                         # clear skeleton when done
                         skeleton_placeholder.empty()
                         
@@ -401,6 +411,11 @@ else:
             
             calc_area_sqm = data.get("area_sq_meter", "")
             calc_area_sqft = data.get("area_sq_feet", "")
+            
+            # fallback to generic area fields for other document types if missing
+            if not calc_area_sqft and not calc_area_sqm:
+                calc_area_sqm = data.get("area", "") or data.get("total_area", "")
+
             if calc_area_sqm and not calc_area_sqft:
                 calc_area_sqft = convert_sqm_to_sqft(calc_area_sqm)
             
@@ -417,80 +432,174 @@ else:
             st.markdown("---")
 
             with st.form("valuation_form"):
-                st.markdown("### Owner Details")
-                owner_name = st.text_input("Owner Name (માલિકનું નામ)", value=data.get("owner_name", ""))
-                father_husband_name = st.text_input("Father / Husband Name (પિતા અથવા પતિનું નામ)", value=data.get("father_husband_name", ""))
-
-                st.markdown("### Location Details")
-                c1, c2, c3 = st.columns(3)
-                village = c1.text_input("Village (ગામ)", value=data.get("village", ""))
-                taluka = c2.text_input("Taluka (તાલુકો)", value=data.get("taluka", ""))
-                district = c3.text_input("District (જિલ્લો)", value=data.get("district", ""))
-
-                st.markdown("### Property Identification")
-                c4, c5 = st.columns(2)
-                survey_num = c4.text_input("Survey Number", value=data.get("survey_number", ""))
-                plot_num = c5.text_input("Plot / Block Number", value=data.get("plot_block_number", ""))
-
-                st.markdown("### Area & Measurement")
-                c6, c7 = st.columns(2)
-                area_sqm = c6.text_input("Area (Sq. Meter)", value=data.get("area_sq_meter", ""))
+                form_data = {"document_type": document_type}
                 
-  
-                extracted_sqft = data.get("area_sq_feet", "")
-                if area_sqm and not extracted_sqft:
-                    calculated_sqft = convert_sqm_to_sqft(area_sqm)
-                    area_sqft = c7.text_input("Area (Sq. Feet)", value=str(calculated_sqft) if calculated_sqft else "")
+                if document_type == "7/12 Extract (Satbara)":
+                    st.markdown("### Location Details")
+                    c1, c2, c3 = st.columns(3)
+                    form_data["village"] = c1.text_input("Village (ગામ)", value=data.get("village", ""))
+                    form_data["taluka"] = c2.text_input("Taluka (તાલુકો)", value=data.get("taluka", ""))
+                    form_data["district"] = c3.text_input("District (જિલ્લો)", value=data.get("district", ""))
+                    
+                    st.markdown("### Property Identification")
+                    c4, c5, c6 = st.columns(3)
+                    form_data["survey_number"] = c4.text_input("Survey Number", value=data.get("survey_number", ""))
+                    form_data["block_number"] = c5.text_input("Block/Hissa Number", value=data.get("block_number", ""))
+                    form_data["khata_number"] = c6.text_input("Khata Number", value=data.get("khata_number", ""))
+
+                    st.markdown("### Ownership & Tenure")
+                    form_data["owner_names"] = st.text_area("Owner(s)/Khatedar Name(s) & Share", value=data.get("owner_names", ""))
+                    form_data["tenure_type"] = st.text_input("Tenure Type (Old/New)", value=data.get("tenure_type", ""))
+
+                    st.markdown("### Area & Cultivation")
+                    c7, c8 = st.columns(2)
+                    form_data["total_area"] = c7.text_input("Total Area", value=data.get("total_area", ""))
+                    form_data["land_type"] = c8.text_input("Land Type", value=data.get("land_type", ""))
+                    c9, c10 = st.columns(2)
+                    form_data["irrigation_source"] = c9.text_input("Irrigation Source", value=data.get("irrigation_source", ""))
+                    form_data["cultivator_name"] = c10.text_input("Cultivator/Tenant Name", value=data.get("cultivator_name", ""))
+                    form_data["crop_details"] = st.text_area("Crop Details", value=data.get("crop_details", ""))
+
+                    st.markdown("### Mutation & Encumbrance")
+                    form_data["mutation_entry_numbers"] = st.text_area("Mutation Entry No.s", value=data.get("mutation_entry_numbers", ""))
+                    form_data["encumbrance_loan_details"] = st.text_area("Encumbrance/Loan Notation", value=data.get("encumbrance_loan_details", ""))
+                    
+                    form_area_val = form_data["total_area"]
+
+                elif document_type == "Property Card":
+                    st.markdown("### City Survey Details")
+                    c1, c2 = st.columns(2)
+                    form_data["city_survey_number"] = c1.text_input("City Survey (CTS) Number", value=data.get("city_survey_number", ""))
+                    form_data["city_survey_office"] = c2.text_input("City Survey Office", value=data.get("city_survey_office", ""))
+                    
+                    c3, c4, c5 = st.columns(3)
+                    form_data["ward"] = c3.text_input("Ward", value=data.get("ward", ""))
+                    form_data["sheet_number"] = c4.text_input("Sheet Number", value=data.get("sheet_number", ""))
+                    form_data["plot_number"] = c5.text_input("Plot Number", value=data.get("plot_number", ""))
+
+                    st.markdown("### Ownership & Tenure")
+                    form_data["owner_names"] = st.text_area("Owner(s) & Share", value=data.get("owner_names", ""))
+                    c6, c7 = st.columns(2)
+                    form_data["tenure_type"] = c6.text_input("Tenure Type", value=data.get("tenure_type", ""))
+                    form_data["land_use_type"] = c7.text_input("Land Use", value=data.get("land_use_type", ""))
+
+                    st.markdown("### Area & Taxes")
+                    c8, c9 = st.columns(2)
+                    form_data["area"] = c8.text_input("Area", value=data.get("area", ""))
+                    form_data["property_tax_assessment_number"] = c9.text_input("Tax Assessment No.", value=data.get("property_tax_assessment_number", ""))
+
+                    st.markdown("### Boundary Details")
+                    b1, b2 = st.columns(2)
+                    form_data["boundary_east"] = b1.text_area("East (પૂર્વ)", value=data.get("boundary_east", ""))
+                    form_data["boundary_west"] = b2.text_area("West (પશ્ચિમ)", value=data.get("boundary_west", ""))
+                    b3, b4 = st.columns(2)
+                    form_data["boundary_north"] = b3.text_area("North (ઉત્તર)", value=data.get("boundary_north", ""))
+                    form_data["boundary_south"] = b4.text_area("South (દક્ષિણ)", value=data.get("boundary_south", ""))
+
+                    st.markdown("### Mutation & Encumbrance")
+                    form_data["mutation_entry_details"] = st.text_area("Mutation Entry Details", value=data.get("mutation_entry_details", ""))
+                    form_data["encumbrance_details"] = st.text_area("Encumbrance Details", value=data.get("encumbrance_details", ""))
+
+                    form_area_val = form_data["area"]
+
+                elif document_type == "Index-II":
+                    st.markdown("### Registration Details")
+                    c1, c2 = st.columns(2)
+                    form_data["document_number"] = c1.text_input("Document Number", value=data.get("document_number", ""))
+                    form_data["document_type"] = c2.text_input("Document Type", value=data.get("document_type", ""))
+                    c3, c4 = st.columns(2)
+                    form_data["registration_date"] = c3.text_input("Registration Date", value=data.get("registration_date", ""))
+                    form_data["sub_registrar_office"] = c4.text_input("Sub-Registrar Office", value=data.get("sub_registrar_office", ""))
+
+                    st.markdown("### Parties")
+                    form_data["executant_name"] = st.text_area("Executant/Seller Name", value=data.get("executant_name", ""))
+                    form_data["claimant_name"] = st.text_area("Claimant/Buyer Name", value=data.get("claimant_name", ""))
+
+                    st.markdown("### Property Details")
+                    form_data["property_description"] = st.text_area("Property Description", value=data.get("property_description", ""))
+
+                    st.markdown("### Financial Details")
+                    f1, f2 = st.columns(2)
+                    form_data["agreement_value"] = f1.text_input("Agreement/Consideration Value", value=data.get("agreement_value", ""))
+                    form_data["jantri_value"] = f2.text_input("Jantri Value", value=data.get("jantri_value", ""))
+                    f3, f4 = st.columns(2)
+                    form_data["stamp_duty_paid"] = f3.text_input("Stamp Duty Paid", value=data.get("stamp_duty_paid", ""))
+                    form_data["registration_fee_paid"] = f4.text_input("Registration Fee Paid", value=data.get("registration_fee_paid", ""))
+                    
+                    form_area_val = "0.0"
+
                 else:
-                    area_sqft = c7.text_input("Area (Sq. Feet)", value=extracted_sqft)
+                    st.markdown("### Owner Details")
+                    form_data["owner_name"] = st.text_input("Owner Name (માલિકનું નામ)", value=data.get("owner_name", ""))
+                    form_data["father_husband_name"] = st.text_input("Father / Husband Name (પિતા અથવા પતિનું નામ)", value=data.get("father_husband_name", ""))
 
-                st.markdown("### Document Information")
-                c8, c9, c10 = st.columns(3)
-                doc_num = c8.text_input("Document Number", value=data.get("document_number", ""))
-                reg_date = c9.text_input("Registration Date", value=data.get("registration_date", ""))
-                registrar = c10.text_input("Sub-Registrar Office", value=data.get("sub_registrar_office", ""))
+                    st.markdown("### Location Details")
+                    c1, c2, c3 = st.columns(3)
+                    form_data["village"] = c1.text_input("Village (ગામ)", value=data.get("village", ""))
+                    form_data["taluka"] = c2.text_input("Taluka (તાલુકો)", value=data.get("taluka", ""))
+                    form_data["district"] = c3.text_input("District (જિલ્લો)", value=data.get("district", ""))
 
-                st.markdown("### Boundary Details")
-                b1, b2 = st.columns(2)
-                east = b1.text_area("East (પૂર્વ)", value=data.get("boundary_east", ""))
-                west = b2.text_area("West (પશ્ચિમ)", value=data.get("boundary_west", ""))
-                b3, b4 = st.columns(2)
-                north = b3.text_area("North (ઉત્તર)", value=data.get("boundary_north", ""))
-                south = b4.text_area("South (દક્ષિણ)", value=data.get("boundary_south", ""))
+                    st.markdown("### Property Identification")
+                    c4, c5 = st.columns(2)
+                    form_data["survey_number"] = c4.text_input("Survey Number", value=data.get("survey_number", ""))
+                    form_data["plot_block_number"] = c5.text_input("Plot / Block Number", value=data.get("plot_block_number", ""))
+
+                    st.markdown("### Area & Measurement")
+                    c6, c7 = st.columns(2)
+                    form_data["area_sq_meter"] = c6.text_input("Area (Sq. Meter)", value=data.get("area_sq_meter", ""))
+                    
+                    extracted_sqft = data.get("area_sq_feet", "")
+                    if form_data["area_sq_meter"] and not extracted_sqft:
+                        calculated_sqft = convert_sqm_to_sqft(form_data["area_sq_meter"])
+                        form_data["area_sq_feet"] = c7.text_input("Area (Sq. Feet)", value=str(calculated_sqft) if calculated_sqft else "")
+                    else:
+                        form_data["area_sq_feet"] = c7.text_input("Area (Sq. Feet)", value=extracted_sqft)
+
+                    st.markdown("### Document Information")
+                    c8, c9, c10 = st.columns(3)
+                    form_data["document_number"] = c8.text_input("Document Number", value=data.get("document_number", ""))
+                    form_data["registration_date"] = c9.text_input("Registration Date", value=data.get("registration_date", ""))
+                    form_data["sub_registrar_office"] = c10.text_input("Sub-Registrar Office", value=data.get("sub_registrar_office", ""))
+
+                    st.markdown("### Boundary Details")
+                    b1, b2 = st.columns(2)
+                    form_data["boundary_east"] = b1.text_area("East (પૂર્વ)", value=data.get("boundary_east", ""))
+                    form_data["boundary_west"] = b2.text_area("West (પશ્ચિમ)", value=data.get("boundary_west", ""))
+                    b3, b4 = st.columns(2)
+                    form_data["boundary_north"] = b3.text_area("North (ઉત્તર)", value=data.get("boundary_north", ""))
+                    form_data["boundary_south"] = b4.text_area("South (દક્ષિણ)", value=data.get("boundary_south", ""))
+                    
+                    form_area_val = form_data["area_sq_feet"]
 
         
                 if st.form_submit_button("Confirm & Save"):
-                    # We recalculate estimated_value based on the actual submitted area_sqft from the form, 
-                    # so that it reflects any user manual edits to the area field!
+                    # Recalculate estimated value based on form's area, handling different formats
                     try:
-                        final_area_val = float(str(area_sqft).replace(",", "").strip())
+                        # Attempt to parse whatever area field is used for the current document type
+                        # If it's something like "1-23-45", this will fail, which is acceptable (defaults to 0)
+                        final_area_str = str(form_area_val).replace(",", "").strip()
+                        # simple fallback to extract numbers if there is a mix
+                        import re
+                        match = re.search(r"[\d\.]+", final_area_str)
+                        if match:
+                            final_area_val = float(match.group(0))
+                            # Convert sqm to sqft if this was a sqm field (like Property Card's "Area")
+                            if document_type != "Dastavej (Sale Deed)" and document_type != "Index-II":
+                                final_area_val = final_area_val * 10.7639
+                        else:
+                            final_area_val = 0.0
                     except:
                         final_area_val = 0.0
                         
                     final_base_value = final_area_val * rate_per_sqft
                     final_estimated_value = final_base_value * (1.0 - depreciation_pct)
 
-                    st.session_state.final_data = {
-                        "owner_name": owner_name,
-                        "father_husband_name": father_husband_name,
-                        "village": village,
-                        "taluka": taluka,
-                        "district": district,
-                        "survey_number": survey_num,
-                        "plot_block_number": plot_num,
-                        "area_sq_meter": area_sqm,
-                        "area_sq_feet": area_sqft,
-                        "document_number": doc_num,
-                        "registration_date": reg_date,
-                        "sub_registrar_office": registrar,
-                        "boundary_east": east,
-                        "boundary_west": west,
-                        "boundary_north": north,
-                        "boundary_south": south,
-                        "rate_per_sqft": rate_per_sqft,
-                        "property_age_years": property_age_years,
-                        "estimated_value": f"₹ {final_estimated_value:,.2f}"
-                    }
+                    # Update form_data with valuation numbers
+                    form_data["rate_per_sqft"] = rate_per_sqft
+                    form_data["property_age_years"] = property_age_years
+                    form_data["estimated_value"] = f"₹ {final_estimated_value:,.2f}"
+
+                    st.session_state.final_data = form_data
                     st.success("Form data validated! You can now download reports.")
 
             if 'final_data' in st.session_state:

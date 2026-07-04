@@ -55,15 +55,44 @@ def generate_pdf_report(data):
     # set up the text for the content
     pdf.set_font("NotoSansGujarati", size=12)
     
-    # organize the data into nice sections
-    sections = {
-        "Owner Details": ["owner_name", "father_husband_name"],
-        "Property Identification": ["document_number", "registration_date", "sub_registrar_office"],
-        "Location Details": ["village", "taluka", "district", "survey_number", "plot_block_number"],
-        "Area & Measurement": ["area_sq_meter", "area_sq_feet"],
-        "Boundary Details": ["boundary_east", "boundary_west", "boundary_north", "boundary_south"],
-        "Estimated Valuation": ["rate_per_sqft", "property_age_years", "estimated_value"]
-    }
+    document_type = data.get("document_type", "Dastavej (Sale Deed)")
+    
+    # organize the data into nice sections based on document type
+    if document_type == "7/12 Extract (Satbara)":
+        sections = {
+            "Location Details": ["village", "taluka", "district", "survey_number", "block_number", "khata_number"],
+            "Ownership & Tenure": ["owner_names", "tenure_type"],
+            "Area & Cultivation": ["total_area", "land_type", "irrigation_source", "crop_details", "cultivator_name"],
+            "Mutation & Encumbrance": ["mutation_entry_numbers", "encumbrance_loan_details"],
+            "Estimated Valuation": ["rate_per_sqft", "property_age_years", "estimated_value"]
+        }
+    elif document_type == "Property Card":
+        sections = {
+            "City Survey Details": ["city_survey_number", "city_survey_office", "ward", "sheet_number", "plot_number"],
+            "Ownership & Tenure": ["owner_names", "tenure_type"],
+            "Area & Land Use": ["area", "land_use_type", "property_tax_assessment_number"],
+            "Boundary Details": ["boundary_east", "boundary_west", "boundary_north", "boundary_south"],
+            "Mutation & Encumbrance": ["mutation_entry_details", "encumbrance_details"],
+            "Estimated Valuation": ["rate_per_sqft", "property_age_years", "estimated_value"]
+        }
+    elif document_type == "Index-II":
+        sections = {
+            "Registration Details": ["document_number", "registration_date", "sub_registrar_office", "document_type"],
+            "Parties": ["executant_name", "claimant_name"],
+            "Property Details": ["property_description"],
+            "Financial Details": ["agreement_value", "jantri_value", "stamp_duty_paid", "registration_fee_paid"],
+            "Estimated Valuation": ["rate_per_sqft", "property_age_years", "estimated_value"]
+        }
+    else:
+        # Default to Dastavej (Sale Deed)
+        sections = {
+            "Owner Details": ["owner_name", "father_husband_name"],
+            "Property Identification": ["document_number", "registration_date", "sub_registrar_office"],
+            "Location Details": ["village", "taluka", "district", "survey_number", "plot_block_number"],
+            "Area & Measurement": ["area_sq_meter", "area_sq_feet"],
+            "Boundary Details": ["boundary_east", "boundary_west", "boundary_north", "boundary_south"],
+            "Estimated Valuation": ["rate_per_sqft", "property_age_years", "estimated_value"]
+        }
     
     for section, fields in sections.items():
         # put section headings in bold
