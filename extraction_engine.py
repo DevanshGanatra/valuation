@@ -366,14 +366,29 @@ def extract_structured_data(api_key, pdf_document, document_type="Dastavej (Sale
             try:
                 data = json.loads(json_str, strict=False)
             except json.JSONDecodeError:
-                # Absolute fallback for hopelessly broken or truncated JSON
+                # Invincible fallback: scans for keys and grabs everything in between
                 data = {}
-                pairs = re.findall(r'"([a-zA-Z_0-9]+)"\s*:\s*"(.*?)"(?=\s*[,}\n]|$)', json_str)
-                for k, v in pairs:
-                    data[k] = v
+                matches = list(re.finditer(r'"([a-zA-Z_0-9]+)"\s*:', json_str))
+                for i in range(len(matches)):
+                    k = matches[i].group(1)
+                    start = matches[i].end()
+                    # Value goes until the next key starts, or end of string
+                    end = matches[i+1].start() if i + 1 < len(matches) else len(json_str)
+                    
+                    val_str = json_str[start:end].strip()
+                    # Clean up trailing commas, brackets, or spaces
+                    val_str = re.sub(r'[,}\s]+$', '', val_str)
+                    # Remove surrounding quotes if they exist
+                    if val_str.startswith('"'): val_str = val_str[1:]
+                    if val_str.endswith('"'): val_str = val_str[:-1]
+                    
+                    # Ignore nested objects like field_confidence
+                    if not val_str.startswith('{'):
+                        data[k] = val_str
+                
                 if not data:
-                    raise
+                    raise Exception("AI response was completely unreadable. Raw response: " + raw_response)
 
         return data
     except Exception as e:
-        return {"error": f"Failed to read AI response: {str(e)}", "raw_response": response.text}
+        return {"error": f"Failed to read AI response: {str(e)}", "raw_response": getattr(response, 'text', '')}
