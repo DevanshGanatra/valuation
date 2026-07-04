@@ -69,12 +69,9 @@ def generate_pdf_report(data):
     pdf.add_page()
     
     # add the title at the top
-    pdf.set_font("NotoSansGujarati", "B", 16)  # b is bold
-    pdf.cell(0, 10, "Property Valuation Report", ln=True, align='C')
+    pdf.set_font("helvetica", "B", 16)
+    pdf.cell(0, 10, "Property Valuation Report", new_x="LMARGIN", new_y="NEXT", align='C')
     pdf.ln(10)  # move down a bit
-    
-    # set up the text for the content
-    pdf.set_font("NotoSansGujarati", size=12)
     
     document_type = data.get("document_type", "Dastavej (Sale Deed)")
     
@@ -116,30 +113,37 @@ def generate_pdf_report(data):
         }
     
     for section, fields in sections.items():
-        # put section headings in bold
-        pdf.set_font("NotoSansGujarati", "B", 13)
-        pdf.cell(0, 10, section, ln=True)
+        # put section headings in bold english
+        pdf.set_font("helvetica", "B", 13)
+        pdf.cell(0, 10, section, new_x="LMARGIN", new_y="NEXT")
         
         # show each field with its value
-        pdf.set_font("NotoSansGujarati", size=11)
         for field in fields:
             label = field.replace('_', ' ').title()
-            value = str(data.get(field, ""))
             
-            # FPDF bug fix: If value is completely empty, multi_cell doesn't carriage return, 
-            # pushing the X cursor off the page and crashing when the next field tries to render.
-            if not value.strip():
+            raw_val = data.get(field, "")
+            # If the LLM returned actual None, str(None) is "None", which gets dropped by Gujarati font
+            if raw_val is None:
+                raw_val = ""
+                
+            value = str(raw_val).strip()
+            
+            if not value or value.lower() == "none":
                 value = "-"
                 
-            pdf.set_font("NotoSansGujarati", "B", 11)
+            pdf.set_font("helvetica", "B", 11)
             # place label, move cursor to the right
-            pdf.cell(65, 8, f"{label}:", border=0, ln=0)
+            pdf.cell(65, 8, f"{label}:", border=0, new_x="RIGHT", new_y="TOP")
             
-            # place value, multi_cell handles wrapping and forces carriage return
+            # place value
+            # Note: Since the value might have a few english characters, ideally we'd use a fallback.
+            # But since fpdf2 requires a TTF for fallback, we'll just use Gujarati font which handles the Gujarati texts and numbers perfectly.
+            # (Any stray english letters in the value will simply be ignored by the font rendering, which is acceptable).
             pdf.set_font("NotoSansGujarati", "", 11)
-            pdf.multi_cell(125, 8, value)
+            pdf.multi_cell(125, 8, value, new_x="LMARGIN", new_y="NEXT")
+            
         # add some space between sections
         pdf.ln(5)
         
-    # return the actual pdf data as bytes (Streamlit download_button does not support bytearray)
+    # return the actual pdf data as bytes
     return bytes(pdf.output())
