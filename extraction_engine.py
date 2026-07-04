@@ -4,6 +4,7 @@ import json
 import io     
 import re     
 from PIL import Image 
+import streamlit as st
 
 def get_pdf_images(doc):
     # ok so basically we need to turn each pdf page into an image
@@ -22,7 +23,8 @@ def get_pdf_images(doc):
     return images
 
 
-def _get_supported_model_candidates():
+@st.cache_data(ttl=3600)
+def _get_supported_model_candidates(api_key):
    
     preferred = ["gemini-2.0-flash", "gemini-1.5-flash-latest"]
     candidates = []
@@ -309,7 +311,7 @@ def extract_structured_data(api_key, pdf_document, document_type="Dastavej (Sale
     response = None
     model_errors = []
     # try different models until one works
-    for model_name in _get_supported_model_candidates():
+    for model_name in _get_supported_model_candidates(api_key):
         try:
             model = genai.GenerativeModel(
                 model_name=model_name,
