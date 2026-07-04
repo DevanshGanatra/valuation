@@ -403,37 +403,47 @@ else:
                 data = {}
 
         
-            st.markdown("### Valuation Calculation")
-            vc1, vc2 = st.columns(2)
-            rate_per_sqft = vc1.number_input("Rate per Sq. Ft. (₹)", value=0.0, step=100.0)
-            property_age_years = vc2.number_input("Property Age (years)", value=0, step=1)
-            
-            calc_area_sqm = data.get("area_sq_meter", "")
-            calc_area_sqft = data.get("area_sq_feet", "")
-            
-            # fallback to generic area fields for other document types if missing
-            if not calc_area_sqft and not calc_area_sqm:
-                calc_area_sqm = data.get("area", "") or data.get("total_area", "")
+            @st.fragment
+            def render_valuation_calculator():
+                st.markdown("### Valuation Calculation")
+                vc1, vc2 = st.columns(2)
+                rate_per_sqft = vc1.number_input("Rate per Sq. Ft. (₹)", value=0.0, step=100.0, key="rate_input")
+                property_age_years = vc2.number_input("Property Age (years)", value=0, step=1, key="age_input")
+                
+                calc_area_sqm = data.get("area_sq_meter", "")
+                calc_area_sqft = data.get("area_sq_feet", "")
+                
+                # fallback to generic area fields for other document types if missing
+                if not calc_area_sqft and not calc_area_sqm:
+                    calc_area_sqm = data.get("area", "") or data.get("total_area", "")
 
-            if document_type == "7/12 Extract (Satbara)":
-                hectare_sqm = parse_hectare_are_sqm(calc_area_sqm)
-                if hectare_sqm is not None:
-                    calc_area_sqm = hectare_sqm
+                if document_type == "7/12 Extract (Satbara)":
+                    hectare_sqm = parse_hectare_are_sqm(calc_area_sqm)
+                    if hectare_sqm is not None:
+                        calc_area_sqm = hectare_sqm
 
-            if calc_area_sqm and not calc_area_sqft:
-                calc_area_sqft = convert_sqm_to_sqft(calc_area_sqm)
+                if calc_area_sqm and not calc_area_sqft:
+                    calc_area_sqft = convert_sqm_to_sqft(calc_area_sqm)
+                
+                try:
+                    area_val = extract_numeric_value(calc_area_sqft)
+                except:
+                    area_val = 0.0
+
+                depreciation_pct = min(property_age_years * 1, 30) / 100.0
+                base_value = area_val * rate_per_sqft
+                estimated_value = base_value * (1.0 - depreciation_pct)
+
+                st.metric("Estimated Property Value", f"₹ {estimated_value:,.2f}")
+                st.markdown("---")
+
+            # render the live updating calculator
+            render_valuation_calculator()
             
-            try:
-                area_val = extract_numeric_value(calc_area_sqft)
-            except:
-                area_val = 0.0
-
+            # read values from session state for the downstream form submission
+            rate_per_sqft = st.session_state.get("rate_input", 0.0)
+            property_age_years = st.session_state.get("age_input", 0)
             depreciation_pct = min(property_age_years * 1, 30) / 100.0
-            base_value = area_val * rate_per_sqft
-            estimated_value = base_value * (1.0 - depreciation_pct)
-
-            st.metric("Estimated Property Value", f"₹ {estimated_value:,.2f}")
-            st.markdown("---")
 
             with st.form("valuation_form"):
                 form_data = {"document_type": document_type}
