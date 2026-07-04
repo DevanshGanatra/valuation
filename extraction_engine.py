@@ -71,6 +71,8 @@ def extract_structured_data(api_key, pdf_content, document_type="Dastavej (Sale 
         Extract the following information in Gujarati (where applicable) and return it in a strictly structured JSON format.
         If a field is not found, return an empty string or null.
         
+        Also include a 'field_confidence' object mapping each field key to "high", "medium", or "low" based on how legible or certain the value was in the source image.
+        
         Fields to extract:
         - owner_name (Owner Name / માલિકનું નામ)
         - father_husband_name (Father / Husband Name / પિતા અથવા પતિનું નામ)
@@ -106,13 +108,33 @@ def extract_structured_data(api_key, pdf_content, document_type="Dastavej (Sale 
             "boundary_east": "",
             "boundary_west": "",
             "boundary_north": "",
-            "boundary_south": ""
+            "boundary_south": "",
+            "field_confidence": {
+                "owner_name": "high",
+                "father_husband_name": "high",
+                "survey_number": "high",
+                "plot_block_number": "high",
+                "village": "high",
+                "taluka": "high",
+                "district": "high",
+                "area_sq_meter": "high",
+                "area_sq_feet": "high",
+                "document_number": "high",
+                "registration_date": "high",
+                "sub_registrar_office": "high",
+                "boundary_east": "high",
+                "boundary_west": "high",
+                "boundary_north": "high",
+                "boundary_south": "high"
+            }
         }
         """,
         "7/12 Extract (Satbara)": """
         Analyze the provided images of a 7/12 Extract (Satbara Utara — VF-7 + VF-12, rural/agricultural land) document.
         Extract the following information in Gujarati (where applicable) and return it in a strictly structured JSON format.
         If a field is not found, return an empty string or null.
+        
+        Also include a 'field_confidence' object mapping each field key to "high", "medium", or "low" based on how legible or certain the value was in the source image.
         
         Fields to extract:
         - village (Village / ગામ)
@@ -147,13 +169,32 @@ def extract_structured_data(api_key, pdf_content, document_type="Dastavej (Sale 
             "crop_details": "",
             "cultivator_name": "",
             "mutation_entry_numbers": "",
-            "encumbrance_loan_details": ""
+            "encumbrance_loan_details": "",
+            "field_confidence": {
+                "village": "high",
+                "taluka": "high",
+                "district": "high",
+                "survey_number": "high",
+                "block_number": "high",
+                "khata_number": "high",
+                "owner_names": "high",
+                "tenure_type": "high",
+                "total_area": "high",
+                "land_type": "high",
+                "irrigation_source": "high",
+                "crop_details": "high",
+                "cultivator_name": "high",
+                "mutation_entry_numbers": "high",
+                "encumbrance_loan_details": "high"
+            }
         }
         """,
         "Property Card": """
         Analyze the provided images of a Property Card (urban/city survey land, issued by City Survey Office) document.
         Extract the following information in Gujarati (where applicable) and return it in a strictly structured JSON format.
         If a field is not found, return an empty string or null.
+        
+        Also include a 'field_confidence' object mapping each field key to "high", "medium", or "low" based on how legible or certain the value was in the source image.
         
         Fields to extract:
         - city_survey_number (City Survey (CTS) Number / સીટી સર્વે નંબર)
@@ -190,13 +231,33 @@ def extract_structured_data(api_key, pdf_content, document_type="Dastavej (Sale 
             "boundary_east": "",
             "boundary_west": "",
             "boundary_north": "",
-            "boundary_south": ""
+            "boundary_south": "",
+            "field_confidence": {
+                "city_survey_number": "high",
+                "city_survey_office": "high",
+                "ward": "high",
+                "sheet_number": "high",
+                "plot_number": "high",
+                "owner_names": "high",
+                "area": "high",
+                "tenure_type": "high",
+                "land_use_type": "high",
+                "mutation_entry_details": "high",
+                "encumbrance_details": "high",
+                "property_tax_assessment_number": "high",
+                "boundary_east": "high",
+                "boundary_west": "high",
+                "boundary_north": "high",
+                "boundary_south": "high"
+            }
         }
         """,
         "Index-II": """
         Analyze the provided images of an Index-II (Garvi/Sub-Registrar one-page registration summary) document.
         Extract the following information in Gujarati (where applicable) and return it in a strictly structured JSON format.
         If a field is not found, return an empty string or null.
+        
+        Also include a 'field_confidence' object mapping each field key to "high", "medium", or "low" based on how legible or certain the value was in the source image.
         
         Fields to extract:
         - document_number (Document Number / દસ્તાવેજ નંબર)
@@ -223,7 +284,20 @@ def extract_structured_data(api_key, pdf_content, document_type="Dastavej (Sale 
             "agreement_value": "",
             "jantri_value": "",
             "stamp_duty_paid": "",
-            "registration_fee_paid": ""
+            "registration_fee_paid": "",
+            "field_confidence": {
+                "document_number": "high",
+                "registration_date": "high",
+                "sub_registrar_office": "high",
+                "document_type": "high",
+                "executant_name": "high",
+                "claimant_name": "high",
+                "property_description": "high",
+                "agreement_value": "high",
+                "jantri_value": "high",
+                "stamp_duty_paid": "high",
+                "registration_fee_paid": "high"
+            }
         }
         """
     }

@@ -434,35 +434,57 @@ else:
             with st.form("valuation_form"):
                 form_data = {"document_type": document_type}
                 
+                def render_confidence(key, container=st):
+                    conf = data.get("field_confidence", {}).get(key)
+                    if conf == "low":
+                        container.caption("⚠ Please verify — AI was not fully confident")
+                    elif conf == "medium":
+                        container.caption("Please double-check")
+                
                 if document_type == "7/12 Extract (Satbara)":
                     st.markdown("### Location Details")
                     c1, c2, c3 = st.columns(3)
                     form_data["village"] = c1.text_input("Village (ગામ)", value=data.get("village", ""))
+                    render_confidence("village", c1)
                     form_data["taluka"] = c2.text_input("Taluka (તાલુકો)", value=data.get("taluka", ""))
+                    render_confidence("taluka", c2)
                     form_data["district"] = c3.text_input("District (જિલ્લો)", value=data.get("district", ""))
+                    render_confidence("district", c3)
                     
                     st.markdown("### Property Identification")
                     c4, c5, c6 = st.columns(3)
                     form_data["survey_number"] = c4.text_input("Survey Number", value=data.get("survey_number", ""))
+                    render_confidence("survey_number", c4)
                     form_data["block_number"] = c5.text_input("Block/Hissa Number", value=data.get("block_number", ""))
+                    render_confidence("block_number", c5)
                     form_data["khata_number"] = c6.text_input("Khata Number", value=data.get("khata_number", ""))
+                    render_confidence("khata_number", c6)
 
                     st.markdown("### Ownership & Tenure")
                     form_data["owner_names"] = st.text_area("Owner(s)/Khatedar Name(s) & Share", value=data.get("owner_names", ""))
+                    render_confidence("owner_names")
                     form_data["tenure_type"] = st.text_input("Tenure Type (Old/New)", value=data.get("tenure_type", ""))
+                    render_confidence("tenure_type")
 
                     st.markdown("### Area & Cultivation")
                     c7, c8 = st.columns(2)
                     form_data["total_area"] = c7.text_input("Total Area", value=data.get("total_area", ""))
+                    render_confidence("total_area", c7)
                     form_data["land_type"] = c8.text_input("Land Type", value=data.get("land_type", ""))
+                    render_confidence("land_type", c8)
                     c9, c10 = st.columns(2)
                     form_data["irrigation_source"] = c9.text_input("Irrigation Source", value=data.get("irrigation_source", ""))
+                    render_confidence("irrigation_source", c9)
                     form_data["cultivator_name"] = c10.text_input("Cultivator/Tenant Name", value=data.get("cultivator_name", ""))
+                    render_confidence("cultivator_name", c10)
                     form_data["crop_details"] = st.text_area("Crop Details", value=data.get("crop_details", ""))
+                    render_confidence("crop_details")
 
                     st.markdown("### Mutation & Encumbrance")
                     form_data["mutation_entry_numbers"] = st.text_area("Mutation Entry No.s", value=data.get("mutation_entry_numbers", ""))
+                    render_confidence("mutation_entry_numbers")
                     form_data["encumbrance_loan_details"] = st.text_area("Encumbrance/Loan Notation", value=data.get("encumbrance_loan_details", ""))
+                    render_confidence("encumbrance_loan_details")
                     
                     form_area_val = form_data["total_area"]
 
@@ -470,35 +492,51 @@ else:
                     st.markdown("### City Survey Details")
                     c1, c2 = st.columns(2)
                     form_data["city_survey_number"] = c1.text_input("City Survey (CTS) Number", value=data.get("city_survey_number", ""))
+                    render_confidence("city_survey_number", c1)
                     form_data["city_survey_office"] = c2.text_input("City Survey Office", value=data.get("city_survey_office", ""))
+                    render_confidence("city_survey_office", c2)
                     
                     c3, c4, c5 = st.columns(3)
                     form_data["ward"] = c3.text_input("Ward", value=data.get("ward", ""))
+                    render_confidence("ward", c3)
                     form_data["sheet_number"] = c4.text_input("Sheet Number", value=data.get("sheet_number", ""))
+                    render_confidence("sheet_number", c4)
                     form_data["plot_number"] = c5.text_input("Plot Number", value=data.get("plot_number", ""))
+                    render_confidence("plot_number", c5)
 
                     st.markdown("### Ownership & Tenure")
                     form_data["owner_names"] = st.text_area("Owner(s) & Share", value=data.get("owner_names", ""))
+                    render_confidence("owner_names")
                     c6, c7 = st.columns(2)
                     form_data["tenure_type"] = c6.text_input("Tenure Type", value=data.get("tenure_type", ""))
+                    render_confidence("tenure_type", c6)
                     form_data["land_use_type"] = c7.text_input("Land Use", value=data.get("land_use_type", ""))
+                    render_confidence("land_use_type", c7)
 
                     st.markdown("### Area & Taxes")
                     c8, c9 = st.columns(2)
                     form_data["area"] = c8.text_input("Area", value=data.get("area", ""))
+                    render_confidence("area", c8)
                     form_data["property_tax_assessment_number"] = c9.text_input("Tax Assessment No.", value=data.get("property_tax_assessment_number", ""))
+                    render_confidence("property_tax_assessment_number", c9)
 
                     st.markdown("### Boundary Details")
                     b1, b2 = st.columns(2)
                     form_data["boundary_east"] = b1.text_area("East (પૂર્વ)", value=data.get("boundary_east", ""))
+                    render_confidence("boundary_east", b1)
                     form_data["boundary_west"] = b2.text_area("West (પશ્ચિમ)", value=data.get("boundary_west", ""))
+                    render_confidence("boundary_west", b2)
                     b3, b4 = st.columns(2)
                     form_data["boundary_north"] = b3.text_area("North (ઉત્તર)", value=data.get("boundary_north", ""))
+                    render_confidence("boundary_north", b3)
                     form_data["boundary_south"] = b4.text_area("South (દક્ષિણ)", value=data.get("boundary_south", ""))
+                    render_confidence("boundary_south", b4)
 
                     st.markdown("### Mutation & Encumbrance")
                     form_data["mutation_entry_details"] = st.text_area("Mutation Entry Details", value=data.get("mutation_entry_details", ""))
+                    render_confidence("mutation_entry_details")
                     form_data["encumbrance_details"] = st.text_area("Encumbrance Details", value=data.get("encumbrance_details", ""))
+                    render_confidence("encumbrance_details")
 
                     form_area_val = form_data["area"]
 
@@ -506,47 +544,66 @@ else:
                     st.markdown("### Registration Details")
                     c1, c2 = st.columns(2)
                     form_data["document_number"] = c1.text_input("Document Number", value=data.get("document_number", ""))
+                    render_confidence("document_number", c1)
                     form_data["document_type"] = c2.text_input("Document Type", value=data.get("document_type", ""))
+                    render_confidence("document_type", c2)
                     c3, c4 = st.columns(2)
                     form_data["registration_date"] = c3.text_input("Registration Date", value=data.get("registration_date", ""))
+                    render_confidence("registration_date", c3)
                     form_data["sub_registrar_office"] = c4.text_input("Sub-Registrar Office", value=data.get("sub_registrar_office", ""))
+                    render_confidence("sub_registrar_office", c4)
 
                     st.markdown("### Parties")
                     form_data["executant_name"] = st.text_area("Executant/Seller Name", value=data.get("executant_name", ""))
+                    render_confidence("executant_name")
                     form_data["claimant_name"] = st.text_area("Claimant/Buyer Name", value=data.get("claimant_name", ""))
+                    render_confidence("claimant_name")
 
                     st.markdown("### Property Details")
                     form_data["property_description"] = st.text_area("Property Description", value=data.get("property_description", ""))
+                    render_confidence("property_description")
 
                     st.markdown("### Financial Details")
                     f1, f2 = st.columns(2)
                     form_data["agreement_value"] = f1.text_input("Agreement/Consideration Value", value=data.get("agreement_value", ""))
+                    render_confidence("agreement_value", f1)
                     form_data["jantri_value"] = f2.text_input("Jantri Value", value=data.get("jantri_value", ""))
+                    render_confidence("jantri_value", f2)
                     f3, f4 = st.columns(2)
                     form_data["stamp_duty_paid"] = f3.text_input("Stamp Duty Paid", value=data.get("stamp_duty_paid", ""))
+                    render_confidence("stamp_duty_paid", f3)
                     form_data["registration_fee_paid"] = f4.text_input("Registration Fee Paid", value=data.get("registration_fee_paid", ""))
+                    render_confidence("registration_fee_paid", f4)
                     
                     form_area_val = "0.0"
 
                 else:
                     st.markdown("### Owner Details")
                     form_data["owner_name"] = st.text_input("Owner Name (માલિકનું નામ)", value=data.get("owner_name", ""))
+                    render_confidence("owner_name")
                     form_data["father_husband_name"] = st.text_input("Father / Husband Name (પિતા અથવા પતિનું નામ)", value=data.get("father_husband_name", ""))
+                    render_confidence("father_husband_name")
 
                     st.markdown("### Location Details")
                     c1, c2, c3 = st.columns(3)
                     form_data["village"] = c1.text_input("Village (ગામ)", value=data.get("village", ""))
+                    render_confidence("village", c1)
                     form_data["taluka"] = c2.text_input("Taluka (તાલુકો)", value=data.get("taluka", ""))
+                    render_confidence("taluka", c2)
                     form_data["district"] = c3.text_input("District (જિલ્લો)", value=data.get("district", ""))
+                    render_confidence("district", c3)
 
                     st.markdown("### Property Identification")
                     c4, c5 = st.columns(2)
                     form_data["survey_number"] = c4.text_input("Survey Number", value=data.get("survey_number", ""))
+                    render_confidence("survey_number", c4)
                     form_data["plot_block_number"] = c5.text_input("Plot / Block Number", value=data.get("plot_block_number", ""))
+                    render_confidence("plot_block_number", c5)
 
                     st.markdown("### Area & Measurement")
                     c6, c7 = st.columns(2)
                     form_data["area_sq_meter"] = c6.text_input("Area (Sq. Meter)", value=data.get("area_sq_meter", ""))
+                    render_confidence("area_sq_meter", c6)
                     
                     extracted_sqft = data.get("area_sq_feet", "")
                     if form_data["area_sq_meter"] and not extracted_sqft:
@@ -554,20 +611,28 @@ else:
                         form_data["area_sq_feet"] = c7.text_input("Area (Sq. Feet)", value=str(calculated_sqft) if calculated_sqft else "")
                     else:
                         form_data["area_sq_feet"] = c7.text_input("Area (Sq. Feet)", value=extracted_sqft)
+                    render_confidence("area_sq_feet", c7)
 
                     st.markdown("### Document Information")
                     c8, c9, c10 = st.columns(3)
                     form_data["document_number"] = c8.text_input("Document Number", value=data.get("document_number", ""))
+                    render_confidence("document_number", c8)
                     form_data["registration_date"] = c9.text_input("Registration Date", value=data.get("registration_date", ""))
+                    render_confidence("registration_date", c9)
                     form_data["sub_registrar_office"] = c10.text_input("Sub-Registrar Office", value=data.get("sub_registrar_office", ""))
+                    render_confidence("sub_registrar_office", c10)
 
                     st.markdown("### Boundary Details")
                     b1, b2 = st.columns(2)
                     form_data["boundary_east"] = b1.text_area("East (પૂર્વ)", value=data.get("boundary_east", ""))
+                    render_confidence("boundary_east", b1)
                     form_data["boundary_west"] = b2.text_area("West (પશ્ચિમ)", value=data.get("boundary_west", ""))
+                    render_confidence("boundary_west", b2)
                     b3, b4 = st.columns(2)
                     form_data["boundary_north"] = b3.text_area("North (ઉત્તર)", value=data.get("boundary_north", ""))
+                    render_confidence("boundary_north", b3)
                     form_data["boundary_south"] = b4.text_area("South (દક્ષિણ)", value=data.get("boundary_south", ""))
+                    render_confidence("boundary_south", b4)
                     
                     form_area_val = form_data["area_sq_feet"]
 
