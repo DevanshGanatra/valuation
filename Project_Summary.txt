@@ -1,0 +1,102 @@
+==========================================================
+        GUJARATI DASTAVEJ AI VALUATOR
+==========================================================
+Project by: Devansh Ganatra
+
+----------------------------------------------------------
+1. WHAT IS THIS PROJECT?
+----------------------------------------------------------
+The Gujarati Dastavej AI Valuator is an intelligent tool 
+built to automate the process of reading and extracting 
+details from Gujarati Property Documents (Dastavej). 
+
+It specifically solves the problem of manually reading 
+complex, often semi-legible, Gujarati legal documents 
+and typing that data into valuation forms.
+
+----------------------------------------------------------
+2. KEY FEATURES
+----------------------------------------------------------
+- AI-Powered Extraction: Uses Google's Gemini 1.5 Flash 
+  to "read" documents like a human.
+- Multi-Page Support: Processes multiple pages of a 
+  PDF simultaneously.
+- Automatic Unit Conversion: Converts Area from 
+  Square Meters (common in documents) to Square Feet 
+  automatically.
+- Interactive Form: Allows users to review and 
+  correct the AI-extracted data before saving.
+- Export Options: Generate professional Valuation 
+  Reports in PDF format or data tables in Excel (.xlsx).
+- Secure: API keys are used for processing only and 
+  are never stored on the server.
+
+----------------------------------------------------------
+3. WHO CAN USE THIS?
+----------------------------------------------------------
+- Property Valuers
+- Real Estate Consultants
+- Bank Officers handling property loans
+- Legal Professionals dealing with property registration
+- Anyone who needs to extract structured data from 
+  Gujarati property documents quickly.
+
+----------------------------------------------------------
+4. TECHNOLOGIES USED
+----------------------------------------------------------
+- Python: The core programming language.
+- Streamlit: Used for building the beautiful Web Interface.
+- Google Gemini AI (1.5 Flash): The "Brain" that reads 
+  the Gujarati text from images.
+- PyMuPDF (fitz): Used for converting PDF pages 
+  into images.
+- Pandas: Used for organizing data and creating 
+  Excel files.
+- FPDF: Used for generating the final PDF 
+  Valuation Report.
+- Pillow (PIL): Used for handling image data in memory.
+
+----------------------------------------------------------
+5. CORE LOGIC (HOW IT WORKS)
+----------------------------------------------------------
+1. PDF to Image: The software first turns each page 
+   of your PDF into a high-quality picture.
+2. AI Analysis: These pictures are sent to Google's 
+   AI with a specific set of instructions (Prompt).
+3. Vision Processing: The AI "looks" at the pictures, 
+   identifies Gujarati text, understands the context 
+   (who is the owner, what is the survey number), 
+   and extracts it.
+4. Data Structuring: The AI returns the data in a 
+   clean "JSON" format (labels and values).
+5. Frontend Display: The data is shown in an 
+   editable form on the website.
+
+----------------------------------------------------------
+6. PROJECT FLOW
+----------------------------------------------------------
+[User Uploads PDF] -> [PDF converted to Images] -> 
+[Images sent to Gemini AI] -> [AI Extracts Data] -> 
+[User Reviews/Edits Form] -> [User Downloads Report]
+
+----------------------------------------------------------
+7. HOW TO RUN THIS PROJECT
+----------------------------------------------------------
+Prerequisites:
+- Python 3.10+ installed.
+- A Gemini API Key (from Google AI Studio).
+
+Steps:
+1. Open terminal/cmd in the project folder.
+2. (Optional) Create a virtual environment:
+   `python -m venv venv`
+3. Activate environment:
+   `venv\Scripts\activate` (Windows)
+4. Install requirements:
+   `pip install -r requirements.txt`
+5. Run the app:
+   `streamlit run app.py`
+
+==========================================================
+          Created by: Devansh Ganatra
+==========================================================
