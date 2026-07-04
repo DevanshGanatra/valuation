@@ -354,7 +354,7 @@ def extract_structured_data(api_key, pdf_document, document_type="Dastavej (Sale
         raw_response = re.sub(r',\s*([\]}])', r'\1', raw_response)
 
         try:
-            data = json.loads(raw_response)
+            data = json.loads(raw_response, strict=False)
         except json.JSONDecodeError:
             # if theres extra text around the json, try to find just the json part
             match = re.search(r"\{.*\}", raw_response, re.DOTALL)
@@ -363,7 +363,16 @@ def extract_structured_data(api_key, pdf_document, document_type="Dastavej (Sale
             json_str = match.group(0)
             # fix trailing commas again just in case
             json_str = re.sub(r',\s*([\]}])', r'\1', json_str)
-            data = json.loads(json_str)
+            try:
+                data = json.loads(json_str, strict=False)
+            except json.JSONDecodeError:
+                # Absolute fallback for hopelessly broken or truncated JSON
+                data = {}
+                pairs = re.findall(r'"([a-zA-Z_0-9]+)"\s*:\s*"(.*?)"(?=\s*[,}\n]|$)', json_str)
+                for k, v in pairs:
+                    data[k] = v
+                if not data:
+                    raise
 
         return data
     except Exception as e:
