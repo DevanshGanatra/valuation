@@ -331,10 +331,14 @@ def extract_structured_data(api_key, pdf_content, document_type="Dastavej (Sale 
     # now parse the response into actual data
     try:
         raw_response = (response.text or "").strip()
+        
         # clean up if ai added markdown code blocks
         if raw_response.startswith("```"):
-            raw_response = raw_response.strip("`")
-            raw_response = raw_response.replace("json", "", 1).strip()
+            raw_response = re.sub(r'^```(?:json)?\s*', '', raw_response)
+            raw_response = re.sub(r'\s*```$', '', raw_response)
+            
+        # Fix common LLM JSON errors like trailing commas before brackets/braces
+        raw_response = re.sub(r',\s*([\]}])', r'\1', raw_response)
 
         try:
             data = json.loads(raw_response)
@@ -343,7 +347,10 @@ def extract_structured_data(api_key, pdf_content, document_type="Dastavej (Sale 
             match = re.search(r"\{.*\}", raw_response, re.DOTALL)
             if not match:
                 raise
-            data = json.loads(match.group(0))
+            json_str = match.group(0)
+            # fix trailing commas again just in case
+            json_str = re.sub(r',\s*([\]}])', r'\1', json_str)
+            data = json.loads(json_str)
 
         return data
     except Exception as e:
