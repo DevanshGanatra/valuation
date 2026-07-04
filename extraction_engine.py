@@ -5,11 +5,10 @@ import io
 import re     
 from PIL import Image 
 
-def get_pdf_images(pdf_content):
+def get_pdf_images(doc):
     # ok so basically we need to turn each pdf page into an image
     # because the ai needs to see it as a picture to understand whats going on
    
-    doc = fitz.open(stream=pdf_content, filetype="pdf")
     images = []
     for page_num in range(len(doc)):
         # grab this specific page
@@ -49,7 +48,7 @@ def _get_supported_model_candidates():
         return preferred
     return ordered + remaining
 
-def extract_structured_data(api_key, pdf_content, document_type="Dastavej (Sale Deed)"):
+def extract_structured_data(api_key, pdf_document, document_type="Dastavej (Sale Deed)"):
     # main function 
     genai.configure(api_key=api_key)
     
@@ -63,7 +62,7 @@ def extract_structured_data(api_key, pdf_content, document_type="Dastavej (Sale 
     }
 
     # first turning the pdf pages into images
-    images = get_pdf_images(pdf_content)
+    images = get_pdf_images(pdf_document)
     
     PROMPTS = {
         "Dastavej (Sale Deed)": """

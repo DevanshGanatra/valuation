@@ -301,6 +301,10 @@ else:
         # get the pdf bytes
         uploaded_pdf_bytes = uploaded_file.getvalue()
         
+        # open the PDF once for the entire session
+        import fitz
+        pdf_document = fitz.open(stream=uploaded_pdf_bytes, filetype="pdf")
+        
         # make a unique id for this file based on its content
         file_hash = hashlib.sha256(uploaded_pdf_bytes).hexdigest()
         
@@ -320,12 +324,10 @@ else:
             with st.spinner("Loading document preview..."):
                 if "pdf_preview_images" not in st.session_state:
                     try:
-                        import fitz
-                        doc = fitz.open(stream=uploaded_pdf_bytes, filetype="pdf")
                         images = []
                         # Max 10 pages for preview to keep the UI snappy and avoid double high-res processing
-                        for page_num in range(min(len(doc), 10)):
-                            page = doc.load_page(page_num)
+                        for page_num in range(min(len(pdf_document), 10)):
+                            page = pdf_document.load_page(page_num)
                             pix = page.get_pixmap(matrix=fitz.Matrix(1, 1))
                             images.append(pix.tobytes("jpeg"))
                         st.session_state.pdf_preview_images = images
@@ -342,10 +344,7 @@ else:
             
             # first time? run the ai to extract data
             if 'extracted_data' not in st.session_state:
-                import fitz
-                doc_check = fitz.open(stream=uploaded_pdf_bytes, filetype="pdf")
-                num_pages = len(doc_check)
-                doc_check.close()
+                num_pages = len(pdf_document)
 
                 if num_pages > 15:
                     st.warning(f"This document has {num_pages} pages. Processing long documents may take longer and cost more in API usage.")
@@ -378,7 +377,7 @@ else:
                 with st.spinner("AI is converting legal text to structured data..."):
                     try:
                         # call to the extraction engine to get the data
-                        extracted_data = extract_structured_data(api_key, uploaded_pdf_bytes, document_type)
+                        extracted_data = extract_structured_data(api_key, pdf_document, document_type)
                         # clear skeleton when done
                         skeleton_placeholder.empty()
                         
