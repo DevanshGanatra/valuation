@@ -668,12 +668,23 @@ else:
                 
                 final_data = st.session_state.final_data
                 
+                # determine the correct file identifier based on document type
+                if document_type == "7/12 Extract (Satbara)":
+                    file_id = final_data.get("survey_number")
+                elif document_type == "Property Card":
+                    file_id = final_data.get("city_survey_number")
+                else:
+                    file_id = final_data.get("document_number")
+                    
+                if not file_id:
+                    file_id = "record"
+                
                 # make an excel file
                 excel_data = generate_excel(final_data)
                 d1.download_button(
                     label="Download Excel (.xlsx)",
                     data=excel_data,
-                    file_name=f"Valuation_{final_data['document_number']}.xlsx",
+                    file_name=f"Valuation_{file_id}.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 )
                 
@@ -682,7 +693,7 @@ else:
                 d2.download_button(
                     label="Download PDF Report",
                     data=pdf_data,
-                    file_name=f"Valuation_{final_data['document_number']}.pdf",
+                    file_name=f"Valuation_{file_id}.pdf",
                     mime="application/pdf"
                 )
 
