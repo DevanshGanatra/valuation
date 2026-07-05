@@ -34,7 +34,7 @@ def get_pdf_images(doc):
 @st.cache_data(ttl=3600)
 def _get_supported_model_candidates(api_key):
    
-    preferred = ["gemini-2.0-flash", "gemini-1.5-flash-latest"]
+    preferred = ["gemini-1.5-pro", "gemini-2.0-flash", "gemini-1.5-flash-latest"]
     candidates = []
     try:
         for model in genai.list_models():
@@ -76,14 +76,14 @@ def extract_structured_data(api_key, pdf_document, document_type="Dastavej (Sale
     
     PROMPTS = {
         "Dastavej (Sale Deed)": """
-        Analyze the provided images of a Gujarati property document (Dastavej). 
+        Analyze the provided images of a Gujarati property document (Dastavej). Read the entire document thoroughly to understand the context properly before extracting.
         Extract the following information and **TRANSLATE ALL VALUES TO ENGLISH**. The final output must be completely in professional English, even if the source is Gujarati.
         If a field is not found, return an empty string or null.
         
         Also include a 'field_confidence' object mapping each field key to "high", "medium", or "low" based on how legible or certain the value was in the source image.
         
         Fields to extract:
-        - owner_name (Owner Name: Look specifically for the "Purchaser" or "Buyer" / ખરીદનાર / વેચાણ લેનાર. This is the new owner.)
+        - owner_name (Owner Name: Look specifically for the "Purchaser", "Buyer", or "ખરીદનારા" / ખરીદનાર / વેચાણ લેનાર. This is the true owner.)
         - father_husband_name (Father / Husband Name)
         - survey_number (Survey Number)
         - plot_block_number (Plot / Block Number)
@@ -95,10 +95,10 @@ def extract_structured_data(api_key, pdf_document, document_type="Dastavej (Sale
         - document_number (Document Number)
         - registration_date (Registration Date - DD/MM/YYYY)
         - sub_registrar_office (Sub-Registrar Office)
-        - boundary_east (East Boundary: Look for ચતુર્દિશા / East / પૂર્વ)
-        - boundary_west (West Boundary: Look for ચતુર્દિશા / West / પશ્ચિમ)
-        - boundary_north (North Boundary: Look for ચતુર્દિશા / North / ઉત્તર)
-        - boundary_south (South Boundary: Look for ચતુર્દિશા / South / દક્ષિણ)
+        - boundary_east (East Boundary: Look for ચતુર્દિશા or ચતુર્સીમા / East / પૂર્વ)
+        - boundary_west (West Boundary: Look for ચતુર્દિશા or ચતુર્સીમા / West / પશ્ચિમ)
+        - boundary_north (North Boundary: Look for ચતુર્દિશા or ચતુર્સીમા / North / ઉત્તર)
+        - boundary_south (South Boundary: Look for ચતુર્દિશા or ચતુર્સીમા / South / દક્ષિણ)
         - property_type (Property Type: Is it Land, Flat, Shop, Rowhouse, Bungalow, Industrial Building, or Other?)
         - occupancy_status (Occupancy Status: Is it Self-occupied, Tenant-occupied, Vacant, or Unknown?)
 
