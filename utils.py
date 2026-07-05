@@ -82,7 +82,7 @@ def generate_pdf_report(data):
             "Ownership & Tenure": ["owner_names", "tenure_type"],
             "Area & Cultivation": ["total_area", "land_type", "irrigation_source", "crop_details", "cultivator_name"],
             "Mutation & Encumbrance": ["mutation_entry_numbers", "encumbrance_loan_details"],
-            "Estimated Valuation": ["rate_per_sqft", "property_age_years", "estimated_value"]
+            "Property Classification": ["property_type", "occupancy_status", "property_age_years", "estimated_value"]
         }
     elif document_type == "Property Card":
         sections = {
@@ -91,7 +91,7 @@ def generate_pdf_report(data):
             "Area & Land Use": ["area", "land_use_type", "property_tax_assessment_number"],
             "Boundary Details": ["boundary_east", "boundary_west", "boundary_north", "boundary_south"],
             "Mutation & Encumbrance": ["mutation_entry_details", "encumbrance_details"],
-            "Estimated Valuation": ["rate_per_sqft", "property_age_years", "estimated_value"]
+            "Property Classification": ["property_type", "occupancy_status", "property_age_years", "estimated_value"]
         }
     elif document_type == "Index-II":
         sections = {
@@ -99,7 +99,7 @@ def generate_pdf_report(data):
             "Parties": ["executant_name", "claimant_name"],
             "Property Details": ["property_description"],
             "Financial Details": ["agreement_value", "jantri_value", "stamp_duty_paid", "registration_fee_paid"],
-            "Estimated Valuation": ["rate_per_sqft", "property_age_years", "estimated_value"]
+            "Property Classification": ["property_type", "occupancy_status", "property_age_years", "estimated_value"]
         }
     else:
         # Default to Dastavej (Sale Deed)
@@ -109,7 +109,7 @@ def generate_pdf_report(data):
             "Location Details": ["village", "taluka", "district", "survey_number", "plot_block_number"],
             "Area & Measurement": ["area_sq_meter", "area_sq_feet"],
             "Boundary Details": ["boundary_east", "boundary_west", "boundary_north", "boundary_south"],
-            "Estimated Valuation": ["rate_per_sqft", "property_age_years", "estimated_value"]
+            "Property Classification": ["property_type", "occupancy_status", "property_age_years", "estimated_value"]
         }
     
     for section, fields in sections.items():

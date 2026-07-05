@@ -406,23 +406,41 @@ else:
         
             @st.fragment
             def render_valuation_calculator():
-                st.markdown("### Valuation Calculation")
-                vc1, vc2 = st.columns(2)
-                rate_per_sqft = vc1.number_input("Rate per Sq. Ft. (₹)", value=0.0, step=100.0, key="rate_input")
-                property_age_years = vc2.number_input("Property Age (years)", value=0, step=1, key="age_input")
+                if document_type in ["7/12 Extract (Satbara)", "Index-II"]:
+                    st.warning(f"**Note:** {document_type} documents represent agricultural land or specific registration summaries. Certified Land and Building Valuers do not have the statutory rights to value agricultural land.")
+                    return
                 
-                calc_area_sqm = data.get("area_sq_meter", "")
+                st.markdown("### Property Classification")
+                pc1, pc2 = st.columns(2)
+                
+                # Default property type from AI extraction or fallback
+                pt_options = ["Land", "Flat", "Shop", "Rowhouse", "Bungalow", "Industrial Building", "Other"]
+                ai_pt = data.get("property_type", "").strip().title()
+                default_pt_idx = 0
+                for i, opt in enumerate(pt_options):
+                    if opt.lower() in ai_pt.lower():
+                        default_pt_idx = i
+                        break
+                        
+                pt_selection = pc1.selectbox("Property Type", options=pt_options, index=default_pt_idx, key="pt_input")
+                
+                occ_options = ["Self-occupied", "Tenant-occupied", "Vacant", "Unknown"]
+                ai_occ = data.get("occupancy_status", "").strip().title()
+                default_occ_idx = 0
+                for i, opt in enumerate(occ_options):
+                    if opt.lower() in ai_occ.lower():
+                        default_occ_idx = i
+                        break
+                
+                occ_selection = pc2.selectbox("Occupancy Status", options=occ_options, index=default_occ_idx, key="occ_input")
+                
+                st.markdown("### Valuation Calculation")
+                property_age_years = st.number_input("Property Age (years)", value=0, step=1, key="age_input")
+                depreciation_pct = min(property_age_years * 1, 30) / 100.0
+                
+                calc_area_sqm = data.get("area_sq_meter", "") or data.get("area", "") or data.get("total_area", "")
                 calc_area_sqft = data.get("area_sq_feet", "")
                 
-                # fallback to generic area fields for other document types if missing
-                if not calc_area_sqft and not calc_area_sqm:
-                    calc_area_sqm = data.get("area", "") or data.get("total_area", "")
-
-                if document_type == "7/12 Extract (Satbara)":
-                    hectare_sqm = parse_hectare_are_sqm(calc_area_sqm)
-                    if hectare_sqm is not None:
-                        calc_area_sqm = hectare_sqm
-
                 if calc_area_sqm and not calc_area_sqft:
                     calc_area_sqft = convert_sqm_to_sqft(calc_area_sqm)
                 
@@ -431,20 +449,45 @@ else:
                 except:
                     area_val = 0.0
 
-                depreciation_pct = min(property_age_years * 1, 30) / 100.0
-                base_value = area_val * rate_per_sqft
-                estimated_value = base_value * (1.0 - depreciation_pct)
-
-                st.metric("Estimated Property Value", f"₹ {estimated_value:,.2f}")
+                if pt_selection in ["Rowhouse", "Bungalow", "Industrial Building"]:
+                    # Compound Property (Property 2)
+                    st.caption("Compound Property: Land + Building")
+                    vc1, vc2 = st.columns(2)
+                    land_area = vc1.number_input("Land Area (Sq. Ft.)", value=area_val, step=100.0, key="land_area_input")
+                    land_rate = vc1.number_input("Land Rate per Sq. Ft. (₹)", value=0.0, step=100.0, key="land_rate_input")
+                    
+                    bldg_area = vc2.number_input("Building Built-up Area (Sq. Ft.)", value=0.0, step=100.0, key="bldg_area_input")
+                    bldg_rate = vc2.number_input("Building Construction Rate (₹)", value=0.0, step=100.0, key="bldg_rate_input")
+                    
+                    land_value = land_area * land_rate
+                    bldg_value = bldg_area * bldg_rate * (1.0 - depreciation_pct)
+                    estimated_value = land_value + bldg_value
+                    
+                    st.metric("Estimated Property Value", f"₹ {estimated_value:,.2f}")
+                else:
+                    # Simple Property (Property 1)
+                    st.caption("Simple Property: Land / Flat / Shop")
+                    vc1, vc2 = st.columns(2)
+                    simp_area = vc1.number_input("Area (Sq. Ft.)", value=area_val, step=100.0, key="simp_area_input")
+                    simp_rate = vc2.number_input("Rate per Sq. Ft. (₹)", value=0.0, step=100.0, key="simp_rate_input")
+                    
+                    base_value = simp_area * simp_rate
+                    estimated_value = base_value * (1.0 - depreciation_pct)
+                    
+                    st.metric("Estimated Property Value", f"₹ {estimated_value:,.2f}")
+                    
+                # Save the final calculated value to session state so the form can grab it
+                st.session_state.final_estimated_value = estimated_value
                 st.markdown("---")
 
             # render the live updating calculator
             render_valuation_calculator()
             
             # read values from session state for the downstream form submission
-            rate_per_sqft = st.session_state.get("rate_input", 0.0)
+            property_type_val = st.session_state.get("pt_input", "Unknown")
+            occupancy_status_val = st.session_state.get("occ_input", "Unknown")
             property_age_years = st.session_state.get("age_input", 0)
-            depreciation_pct = min(property_age_years * 1, 30) / 100.0
+            final_estimated_value = st.session_state.get("final_estimated_value", 0.0)
 
             with st.form("valuation_form"):
                 form_data = {"document_type": document_type}
@@ -655,30 +698,15 @@ else:
 
         
                 if st.form_submit_button("Confirm & Save"):
-                    # Recalculate estimated value based on form's area, handling different formats
-                    try:
-                        # Attempt to parse whatever area field is used for the current document type
-                        final_area_val = None
-                        if document_type == "7/12 Extract (Satbara)":
-                            parsed_hectare = parse_hectare_are_sqm(form_area_val)
-                            if parsed_hectare is not None:
-                                final_area_val = parsed_hectare
-                                
-                        if final_area_val is None:
-                            final_area_val = extract_numeric_value(form_area_val)
-                            
-                        if final_area_val > 0 and document_type != "Dastavej (Sale Deed)" and document_type != "Index-II":
-                            final_area_val = final_area_val * 10.7639
-                    except:
-                        final_area_val = 0.0
-                        
-                    final_base_value = final_area_val * rate_per_sqft
-                    final_estimated_value = final_base_value * (1.0 - depreciation_pct)
-
-                    # Update form_data with valuation numbers
-                    form_data["rate_per_sqft"] = rate_per_sqft
+                    # Add our new dynamic fields to the data
+                    form_data["property_type"] = property_type_val
+                    form_data["occupancy_status"] = occupancy_status_val
                     form_data["property_age_years"] = property_age_years
-                    form_data["estimated_value"] = f"₹ {final_estimated_value:,.2f}"
+
+                    if document_type in ["7/12 Extract (Satbara)", "Index-II"]:
+                        form_data["estimated_value"] = "N/A (Statutory Restriction)"
+                    else:
+                        form_data["estimated_value"] = f"₹ {final_estimated_value:,.2f}"
 
                     st.session_state.final_data = form_data
                     st.success("Form data validated! You can now download reports.")
