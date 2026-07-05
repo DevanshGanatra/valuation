@@ -716,8 +716,8 @@ else:
 
             if 'final_data' in st.session_state:
                 st.markdown("---")
-                st.subheader("📥 Download Options")
-                d1, d2 = st.columns(2)
+                st.subheader("📥 Download & Verify Options")
+                d1, d2, d3 = st.columns(3)
                 
                 final_data = st.session_state.final_data
                 
@@ -748,6 +748,13 @@ else:
                     data=pdf_data,
                     file_name=f"Valuation_{file_id}.pdf",
                     mime="application/pdf"
+                )
+                
+                # anyror verification link
+                d3.link_button(
+                    label="Verify on AnyROR Gujarat 🔗",
+                    url="https://anyror.gujarat.gov.in/",
+                    help="Open Gujarat's official land record portal (Any Records of Rights Anywhere in Gujarat)"
                 )
 
         # button to reset
