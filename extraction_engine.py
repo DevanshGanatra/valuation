@@ -380,38 +380,29 @@ def extract_structured_data(api_key, pdf_document, document_type="Dastavej (Sale
         try:
             data = json.loads(raw_response, strict=False)
         except json.JSONDecodeError:
-            # if theres extra text around the json, try to find just the json part
-            match = re.search(r"\{.*\}", raw_response, re.DOTALL)
-            if not match:
-                raise
-            json_str = match.group(0)
-            # fix trailing commas again just in case
-            json_str = re.sub(r',\s*([\]}])', r'\1', json_str)
-            try:
-                data = json.loads(json_str, strict=False)
-            except json.JSONDecodeError:
-                # Invincible fallback: scans for keys and grabs everything in between
-                data = {}
-                matches = list(re.finditer(r'"([a-zA-Z_0-9]+)"\s*:', json_str))
-                for i in range(len(matches)):
-                    k = matches[i].group(1)
-                    start = matches[i].end()
-                    # Value goes until the next key starts, or end of string
-                    end = matches[i+1].start() if i + 1 < len(matches) else len(json_str)
-                    
-                    val_str = json_str[start:end].strip()
-                    # Clean up trailing commas, brackets, or spaces
-                    val_str = re.sub(r'[,}\s]+$', '', val_str)
-                    # Remove surrounding quotes if they exist
-                    if val_str.startswith('"'): val_str = val_str[1:]
-                    if val_str.endswith('"'): val_str = val_str[:-1]
-                    
-                    # Ignore nested objects like field_confidence
-                    if not val_str.startswith('{'):
-                        data[k] = val_str
+            # Invincible fallback: scans for keys and grabs everything in between
+            data = {}
+            # match keys in quotes followed by a colon
+            matches = list(re.finditer(r'"([a-zA-Z_0-9]+)"\s*:', raw_response))
+            for i in range(len(matches)):
+                k = matches[i].group(1)
+                start = matches[i].end()
+                # Value goes until the next key starts, or end of string
+                end = matches[i+1].start() if i + 1 < len(matches) else len(raw_response)
                 
-                if not data:
-                    raise Exception("AI response was completely unreadable. Raw response: " + raw_response)
+                val_str = raw_response[start:end].strip()
+                # Clean up trailing commas, brackets, or spaces
+                val_str = re.sub(r'[,}\s]+$', '', val_str)
+                # Remove surrounding quotes if they exist
+                if val_str.startswith('"'): val_str = val_str[1:]
+                if val_str.endswith('"'): val_str = val_str[:-1]
+                
+                # Ignore nested objects like field_confidence
+                if not val_str.startswith('{'):
+                    data[k] = val_str
+            
+            if not data:
+                raise Exception(f"AI response was completely unreadable. Raw response: {raw_response}")
 
         return data
     except Exception as e:
