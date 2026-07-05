@@ -139,6 +139,8 @@ def generate_pdf_report(data):
             # Note: The AI now translates everything to English. We must use helvetica to render the English text properly.
             # To prevent fpdf2 from crashing if the AI accidentally leaves a Gujarati character in the string,
             # we safely encode to latin-1 (ignoring errors) before rendering.
+            # Replace Rupee symbol before latin-1 encoding since it's not supported by core fonts
+            value = value.replace('₹', 'Rs. ')
             safe_value = value.encode('latin-1', 'replace').decode('latin-1')
             
             pdf.set_font("helvetica", "", 11)
