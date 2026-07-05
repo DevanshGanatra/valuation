@@ -338,6 +338,7 @@ def extract_structured_data(api_key, pdf_document, document_type="Dastavej (Sale
     # Append critical JSON formatting instruction to all prompts
     for key in PROMPTS:
         PROMPTS[key] += "\n\nCRITICAL: Ensure the output is STRICTLY valid JSON. You must escape any double quotes (\\\") and newlines (\\\\n) inside string values. Do not truncate the JSON output."
+        PROMPTS[key] += "\n\nCRITICAL ACCURACY RULE: Gujarati numbers in scanned documents can be blurry. Pay extreme attention to the difference between ૯ (9) and ૮ (8), as well as ૭ (7) and ૦ (0). Double-check all digits, survey numbers, plot numbers, and areas by reading the surrounding context to ensure perfect numeric accuracy."
 
     prompt = PROMPTS.get(document_type, PROMPTS["Dastavej (Sale Deed)"])
 
