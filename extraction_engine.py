@@ -218,13 +218,13 @@ def extract_structured_data(api_key, pdf_document, document_type="Dastavej (Sale
         Also include a 'field_confidence' object mapping each field key to "high", "medium", or "low".
         
         Fields to extract:
-        - city_survey_number (City Survey CTS Number)
-        - city_survey_office (City Survey Office)
-        - ward (Ward)
-        - sheet_number (Sheet Number)
+        - city_survey_number (City Survey CTS Number: Look for સિટી સરવે નંબર)
+        - city_survey_office (City Survey Office: Look for સિટી સરવે ઓફિસ)
+        - ward (Ward: Look for વોર્ડ)
+        - sheet_number (Sheet Number: Look for શીટ નંબર)
         - plot_number (Plot Number)
-        - owner_names (Owner(s) & Share)
-        - area (Area)
+        - owner_names (Current Owner(s) & Share: Look for the most recent/last entry under 'નવો ધારણ કરનાર' or 'ધારણ કરનાર' in the mutation table)
+        - area (Area: Look for ક્ષેત્રફળ)
         - tenure_type (Tenure Type)
         - land_use_type (Land Use: Residential/Commercial/Industrial)
         - mutation_entry_details (Mutation Entry Details)
@@ -234,7 +234,7 @@ def extract_structured_data(api_key, pdf_document, document_type="Dastavej (Sale
         - boundary_west (West Boundary: Look for ચતુર્દિશા / West)
         - boundary_north (North Boundary: Look for ચતુર્દિશા / North)
         - boundary_south (South Boundary: Look for ચતુર્દિશા / South)
-        - property_type (Property Type: Land, Flat, Shop, Rowhouse, Bungalow, Industrial Building)
+        - property_type (Property Type: E.g., Land, Flat, Shop. Look at the latest mutation entry details to see if a 'ફ્લેટ' (Flat) or 'દુકાન' (Shop) is mentioned, otherwise default to Land.)
         - occupancy_status (Occupancy Status: Self-occupied, Tenant-occupied, Vacant)
 
         JSON Structure Example:
