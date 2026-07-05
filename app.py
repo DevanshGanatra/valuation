@@ -295,7 +295,10 @@ else:
         st.session_state.pop("pdf_preview_images", None)
         st.session_state.last_document_type = document_type
 
-    uploaded_file = st.file_uploader(f"Upload {document_type} (PDF)", type=["pdf"])
+    if "uploader_key" not in st.session_state:
+        st.session_state.uploader_key = 0
+
+    uploaded_file = st.file_uploader(f"Upload {document_type} (PDF)", type=["pdf"], key=f"uploader_{st.session_state.uploader_key}")
 
     if uploaded_file is not None:
         # get the pdf bytes
@@ -749,8 +752,10 @@ else:
 
         # button to reset
         if st.button("🔄 Process Another Document"):
+            current_key = st.session_state.get("uploader_key", 0)
             for key in list(st.session_state.keys()):
                 del st.session_state[key]
+            st.session_state.uploader_key = current_key + 1
             st.rerun()
 
         # Disable Google Chrome Autofill using a hidden JavaScript component
