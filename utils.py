@@ -136,11 +136,13 @@ def generate_pdf_report(data):
             pdf.cell(65, 8, f"{label}:", border=0, new_x="RIGHT", new_y="TOP")
             
             # place value
-            # Note: Since the value might have a few english characters, ideally we'd use a fallback.
-            # But since fpdf2 requires a TTF for fallback, we'll just use Gujarati font which handles the Gujarati texts and numbers perfectly.
-            # (Any stray english letters in the value will simply be ignored by the font rendering, which is acceptable).
-            pdf.set_font("NotoSansGujarati", "", 11)
-            pdf.multi_cell(125, 8, value, new_x="LMARGIN", new_y="NEXT")
+            # Note: The AI now translates everything to English. We must use helvetica to render the English text properly.
+            # To prevent fpdf2 from crashing if the AI accidentally leaves a Gujarati character in the string,
+            # we safely encode to latin-1 (ignoring errors) before rendering.
+            safe_value = value.encode('latin-1', 'replace').decode('latin-1')
+            
+            pdf.set_font("helvetica", "", 11)
+            pdf.multi_cell(125, 8, safe_value, new_x="LMARGIN", new_y="NEXT")
             
         # add some space between sections
         pdf.ln(5)
