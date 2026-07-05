@@ -415,7 +415,7 @@ else:
                 
                 # Default property type from AI extraction or fallback
                 pt_options = ["Land", "Flat", "Shop", "Rowhouse", "Bungalow", "Industrial Building", "Other"]
-                ai_pt = data.get("property_type", "").strip().title()
+                ai_pt = str(data.get("property_type") or "").strip().title()
                 default_pt_idx = 0
                 for i, opt in enumerate(pt_options):
                     if opt.lower() in ai_pt.lower():
@@ -425,7 +425,7 @@ else:
                 pt_selection = pc1.selectbox("Property Type", options=pt_options, index=default_pt_idx, key="pt_input")
                 
                 occ_options = ["Self-occupied", "Tenant-occupied", "Vacant", "Unknown"]
-                ai_occ = data.get("occupancy_status", "").strip().title()
+                ai_occ = str(data.get("occupancy_status") or "").strip().title()
                 default_occ_idx = 0
                 for i, opt in enumerate(occ_options):
                     if opt.lower() in ai_occ.lower():
